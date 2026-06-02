@@ -4,7 +4,7 @@ import Link from 'next/link'
 export const metadata: Metadata = { title: 'Stredar — Community Speed Data' }
 
 const stats = [
-  { value: '~£300', label: 'Unit cost', note: 'vs. £3,000–£8,000 for commercial SIDs' },
+  { value: '~£510', label: 'Unit cost', note: 'vs. £3,000–£8,000 for commercial SIDs' },
   { value: '100%', label: 'Anonymised', note: 'No registration plates. No personal data.' },
   { value: '0', label: 'Enforcement', note: 'Driver education only — no Home Office Type Approval required.' },
 ]
