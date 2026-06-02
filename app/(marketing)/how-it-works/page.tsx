@@ -245,6 +245,52 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
+      {/* ── Simulator callout ────────────────────────────────── */}
+      <section style={{ background: 'var(--concrete-50)', borderBottom: 'var(--bd-light)' }}>
+        <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-16)', alignItems: 'center' }}>
+          <div>
+            <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-3)' }}>Interactive Demo</p>
+            <h2 className="t-h2" style={{ color: 'var(--ink)', textTransform: 'uppercase', marginBottom: 'var(--sp-5)' }}>
+              Try the SC-1 Simulator
+            </h2>
+            <p className="t-body-lg" style={{ color: 'var(--ink-2)', marginBottom: 'var(--sp-5)' }}>
+              See the unit working in real time. The simulator runs a live LED display, radar sweep,
+              and traffic detection — switch between Monitor and Display modes, adjust the speed
+              threshold, and watch the analytics build as vehicles pass.
+            </p>
+            <p className="t-body" style={{ color: 'var(--ink-2)', marginBottom: 'var(--sp-8)' }}>
+              No install required. Runs entirely in your browser.
+            </p>
+            <a
+              href="/simulator.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'inline-block', background: 'var(--hivis-500)', color: 'var(--white)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, textTransform: 'uppercase', letterSpacing: '0.04em', padding: '14px 32px', borderRadius: 'var(--r-sm)', textDecoration: 'none' }}
+            >
+              Launch Simulator
+            </a>
+          </div>
+          <div style={{ background: 'var(--asphalt-900)', border: '1px solid var(--steel-500)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-8)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+            {[
+              { label: 'LED Display',       desc: 'Live speed feedback — amber, red SLOW DOWN, green Thank You' },
+              { label: 'Radar Sweep',       desc: 'Animated 24 GHz Doppler visualisation with vehicle blips' },
+              { label: 'Monitor Mode',      desc: 'Silent logging — no display, unbiased baseline data' },
+              { label: 'Traffic Profiles',  desc: 'Normal, heavy, speeding, and quiet traffic scenarios' },
+              { label: 'Live Analytics',    desc: 'Speed histogram, trend chart, 85th percentile, % over limit' },
+              { label: 'Unit Status',       desc: 'Battery, solar input, GPS, 4G signal, temperature' },
+            ].map(item => (
+              <div key={item.label} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'flex-start' }}>
+                <span style={{ color: 'var(--hivis-500)', fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, flexShrink: 0, marginTop: 2 }}>→</span>
+                <div>
+                  <span className="t-label" style={{ color: 'var(--steel-100)', display: 'block', marginBottom: 2 }}>{item.label}</span>
+                  <span className="t-body-sm" style={{ color: 'var(--steel-300)' }}>{item.desc}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ───────────────────────────────────────────────── */}
       <section style={{ background: 'var(--asphalt-900)' }}>
         <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--sp-8)' }}>
