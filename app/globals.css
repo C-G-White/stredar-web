@@ -128,9 +128,10 @@ body { overflow-x: hidden; }
 /* Histogram / compliance split */
 .cols-hist { display: grid; grid-template-columns: 2fr 1fr; }
 
-/* Nav horizontal scroll (no visible scrollbar) */
-.nav-scroll { overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
-.nav-scroll::-webkit-scrollbar { display: none; }
+/* Nav: desktop links visible, hamburger hidden */
+.nav-desktop { display: flex; gap: var(--sp-6); align-items: center; flex: 1; justify-content: flex-end; }
+.nav-mobile-btn { display: none; }
+.nav-mobile-panel { display: none; }
 
 @media (max-width: 768px) {
   /* Collapse two-column layouts to single column */
@@ -143,6 +144,11 @@ body { overflow-x: hidden; }
   /* Scale down large display headings */
   .t-display-1 { font-size: 46px; }
   .t-display-2 { font-size: 34px; }
+
+  /* Nav: swap desktop links for hamburger */
+  .nav-desktop { display: none; }
+  .nav-mobile-btn { display: flex; align-items: center; justify-content: center; }
+  .nav-mobile-panel { display: flex; }
 }
 
 @media (max-width: 480px) {
