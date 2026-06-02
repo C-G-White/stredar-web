@@ -23,3 +23,9 @@ Thumbs.db
 .idea/
 *.swp
 .vercel
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
+
+# Tooling
+.nwave/
