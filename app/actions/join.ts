@@ -52,7 +52,7 @@ export async function submitJoinEnquiry(
   try {
     // Notification to Stredar team
     await resend.emails.send({
-      from: 'Stredar Enquiries <noreply@stredar.uk>',
+      from: 'Stredar Enquiries <admin@stredar.uk>',
       to:   'join@stredar.uk',
       replyTo: data.email,
       subject: `New Scheme Enquiry — ${data.group}, ${data.location}`,
@@ -91,7 +91,8 @@ export async function submitJoinEnquiry(
 
     // Confirmation to enquirer
     await resend.emails.send({
-      from: 'Stredar <noreply@stredar.uk>',
+      from: 'Stredar <admin@stredar.uk>',
+      replyTo: 'admin@stredar.uk',
       to:   data.email,
       subject: 'We\'ve received your Stredar enquiry',
       html: `

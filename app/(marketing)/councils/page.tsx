@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import CouncilsForm from './CouncilsForm'
 
 export const metadata: Metadata = { title: 'For Councils' }
 
@@ -232,30 +233,33 @@ export default function CouncilsPage() {
 
       {/* ── Contact ───────────────────────────────────────────── */}
       <section style={{ background: 'var(--concrete-50)' }}>
-        <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-16)', alignItems: 'center' }}>
+        <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--sp-16)', alignItems: 'start' }}>
           <div>
             <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-3)' }}>Get in Touch</p>
             <h2 className="t-h2" style={{ color: 'var(--ink)', textTransform: 'uppercase', marginBottom: 'var(--sp-5)' }}>
               Speak to Us About Your Area
             </h2>
-            <p className="t-body-lg" style={{ color: 'var(--ink-2)', marginBottom: 'var(--sp-6)' }}>
+            <p className="t-body-lg" style={{ color: 'var(--ink-2)', marginBottom: 'var(--sp-8)' }}>
               Whether you want to understand the scheme, discuss a specific site, or explore
-              a more formal partnership, we're happy to have a conversation at officer or
+              a more formal partnership, we are happy to have a conversation at officer or
               member level.
             </p>
-            <a
-              href="mailto:councils@stredar.uk"
-              style={{ display: 'inline-block', background: 'var(--hivis-500)', color: 'var(--white)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, textTransform: 'uppercase', letterSpacing: '0.04em', padding: '14px 32px', borderRadius: 'var(--r-sm)', textDecoration: 'none' }}
-            >
-              Email councils@stredar.uk
-            </a>
+            <CouncilsForm />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', position: 'sticky', top: 80 }}>
+            <div style={{ background: 'var(--white)', border: 'var(--bd-light)', borderTop: 'var(--bd-accent)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-6)', boxShadow: 'var(--sh-1)' }}>
+              <p className="t-label" style={{ color: 'var(--ink-3)', marginBottom: 'var(--sp-3)' }}>Prefer email?</p>
+              <p className="t-body-sm" style={{ color: 'var(--ink-2)', marginBottom: 'var(--sp-2)' }}>
+                Write to us directly at:
+              </p>
+              <a href="mailto:councils@stredar.uk" style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--hivis-600)', textDecoration: 'none', fontWeight: 600 }}>
+                councils@stredar.uk
+              </a>
+            </div>
             <div style={{ background: 'var(--white)', border: 'var(--bd-light)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-6)', boxShadow: 'var(--sh-1)' }}>
               <p className="t-label" style={{ color: 'var(--ink-3)', marginBottom: 'var(--sp-3)' }}>Community groups in your area</p>
               <p className="t-body-sm" style={{ color: 'var(--ink-2)', marginBottom: 'var(--sp-3)' }}>
-                If a community group in your area wants to deploy a unit, they can make an
-                initial enquiry directly.
+                If a community group wants to deploy a unit, they can enquire directly.
               </p>
               <Link href="/join" style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: 'var(--hivis-600)', textDecoration: 'none' }}>
                 Community enquiry form &rarr;
@@ -264,7 +268,7 @@ export default function CouncilsPage() {
             <div style={{ background: 'var(--white)', border: 'var(--bd-light)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-6)', boxShadow: 'var(--sh-1)' }}>
               <p className="t-label" style={{ color: 'var(--ink-3)', marginBottom: 'var(--sp-3)' }}>National speed data</p>
               <p className="t-body-sm" style={{ color: 'var(--ink-2)', marginBottom: 'var(--sp-3)' }}>
-                All data from deployed units is publicly available on this platform.
+                All data from deployed units is publicly available.
               </p>
               <Link href="/data" style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: 'var(--hivis-600)', textDecoration: 'none' }}>
                 View live data &rarr;
