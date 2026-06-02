@@ -2,9 +2,16 @@
 // Run once: node scripts/seed-demo.mjs
 
 import { neon } from '@neondatabase/serverless'
+import { config } from 'dotenv'
 
-const DB = 'postgresql://neondb_owner:npg_PRFA6WgwCv7K@ep-falling-wildflower-ab7nr8y4-pooler.eu-west-2.aws.neon.tech/stredar?sslmode=require&channel_binding=require'
-const sql = neon(DB)
+config({ path: '.env.local' })
+
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL not set. Add it to .env.local first.')
+  process.exit(1)
+}
+
+const sql = neon(process.env.DATABASE_URL)
 
 const SITES = [
   { name: 'High Street',   address: 'High Street, Fakenham, Norfolk',     lat: 52.8268, lng: 0.8473, limit: 30 },
