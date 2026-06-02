@@ -131,7 +131,6 @@ body { overflow-x: hidden; }
 /* Nav: desktop links visible, hamburger hidden */
 .nav-desktop { display: flex; gap: var(--sp-6); align-items: center; flex: 1; justify-content: flex-end; }
 .nav-mobile-btn { display: none; }
-.nav-mobile-panel { display: none; }
 
 @media (max-width: 768px) {
   /* Collapse two-column layouts to single column */
@@ -148,7 +147,6 @@ body { overflow-x: hidden; }
   /* Nav: swap desktop links for hamburger */
   .nav-desktop { display: none; }
   .nav-mobile-btn { display: flex; align-items: center; justify-content: center; }
-  .nav-mobile-panel { display: flex; }
 }
 
 @media (max-width: 480px) {

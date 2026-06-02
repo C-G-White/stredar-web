@@ -129,10 +129,10 @@ export default function SiteNav() {
         </button>
       </div>
 
-      {/* ── Mobile menu panel ─────────────────────────────── */}
+      {/* ── Mobile menu panel — display driven by open state ── */}
       <div
-        className="nav-mobile-panel"
         style={{
+          display: open ? 'flex' : 'none',
           flexDirection: 'column',
           background: 'var(--asphalt-900)',
           borderBottom: '3px solid var(--hivis-500)',
