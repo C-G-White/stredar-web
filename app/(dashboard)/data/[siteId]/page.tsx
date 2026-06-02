@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: site?.name ?? 'Site Data' }
 }
 
-export const revalidate = 30
+export const dynamic = 'force-dynamic'
 
 export default async function SitePage({ params }: Props) {
   const { siteId } = await params

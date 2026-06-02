@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import SiteGrid from '@/components/dashboard/SiteGrid'
 
 export const metadata: Metadata = { title: 'Live Data' }
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export default function DataPage() {
   return (
