@@ -16,7 +16,7 @@ export default function SiteNav() {
   return (
     <header style={{ borderBottom: 'var(--bd-light)', background: 'var(--white)', position: 'sticky', top: 0, zIndex: 100 }}>
       <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: '0 var(--sp-6)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-        <Link href="/" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: 'var(--ink)', textDecoration: 'none', letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+        <Link href="/" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: 'var(--ink)', textDecoration: 'none', letterSpacing: '-0.01em' }}>
           <span style={{ color: 'var(--hivis-500)' }}>S</span>TREDAR
         </Link>
         <nav style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}>
