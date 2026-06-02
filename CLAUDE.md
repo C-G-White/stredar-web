@@ -38,14 +38,32 @@ Route groups share their layout but share the root `app/layout.tsx` (fonts, glob
 - `lib/db.ts` — Neon serverless SQL client (tagged template literal)
 - `lib/types.ts` — `Site`, `Reading`, `SiteSummary` types
 - `lib/schema.sql` — one-time DB setup script
-- `app/globals.css` — full Stredar design token set + base reset
+- `app/globals.css` — full Stredar design token set, typography helpers, responsive layout utilities
+- `components/dashboard/LiveAnalytics.tsx` — client component, polls `/api/data` every 30s
 - `components/dashboard/SpeedMap.tsx` — client component, lazy-loads Leaflet
+- `components/dashboard/SiteGrid.tsx` — server component, direct SQL
+- `app/actions/join.ts` / `app/actions/councils.ts` — Server Actions for form submissions
+- `scripts/seed-demo.mjs` — seeds 5 Norfolk demo sites + ~1,200 readings from `.env.local`
 
-## Design conventions
+## Standards documents
 
-Design tokens live in `globals.css` (synced from `../stredar/colors_and_type.css`). Use CSS custom properties directly in inline styles; no Tailwind. Key patterns:
+Full standards are in `docs/`. Read the relevant doc before making changes in that area.
 
-- `--bd-accent` (3px hi-vis left border) on active/alerting cards
-- `--font-led` + `--led-amber` for speed number display
-- `--over-500` / `--warn-500` / `--ok-500` for speed state colours
-- `t-label` class for all caps mono eyebrows and metadata
+| Topic | Document |
+|---|---|
+| Device auth, API keys, future user auth | [`docs/authentication.md`](docs/authentication.md) |
+| Server Component SQL, client polling, cache headers | [`docs/data-fetching.md`](docs/data-fetching.md) |
+| Server Actions, forms, Resend email, ingest API | [`docs/data-mutations.md`](docs/data-mutations.md) |
+| Tables, indexes, types, query patterns, migrations | [`docs/database-schema.md`](docs/database-schema.md) |
+| Design tokens, typography, responsive classes, card patterns | [`docs/ui-conventions.md`](docs/ui-conventions.md) |
+
+## Design conventions (summary)
+
+Full detail in [`docs/ui-conventions.md`](docs/ui-conventions.md). Key rules:
+
+- Design tokens from `globals.css` via `var(--token)` in inline styles. No Tailwind.
+- Responsive grids use CSS utility classes (`cols-2`, `cols-2-1`, `cols-4`, etc.) — not inline `gridTemplateColumns`.
+- `--bd-accent` (3px hi-vis left/top border) on active, alerting, or first-in-sequence items.
+- `--font-led` + colour token for any speed number display.
+- `--over-500` / `--warn-500` / `--ok-500` for speed state semantics.
+- `.t-label` for all-caps mono eyebrows and metadata.
