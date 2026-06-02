@@ -136,7 +136,7 @@ export default function HomePage() {
 
       {/* ── Pilot status ─────────────────────────────────────── */}
       <section style={{ background: 'var(--asphalt-800)', borderBottom: '1px solid var(--steel-500)' }}>
-        <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-16)', alignItems: 'center' }}>
+        <div className="cols-2" style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', gap: 'var(--sp-16)', alignItems: 'center' }}>
           <div>
             <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-3)' }}>
               Current Status

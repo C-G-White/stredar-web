@@ -192,7 +192,7 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-3)' }}>
+      <div className="cols-4" style={{ gap: 'var(--sp-3)' }}>
         {statCards.map((card, i) => (
           <div key={card.label} style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderLeft: i === 0 ? 'var(--bd-accent)' : 'var(--bd-dark)', borderRadius: 'var(--r-md)', padding: 'var(--sp-5)' }}>
             <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-2)' }}>{card.label}</p>
@@ -203,7 +203,7 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
       </div>
 
       {/* Histogram + compliance */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--sp-4)' }}>
+      <div className="cols-hist" style={{ gap: 'var(--sp-4)' }}>
         <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-md)', padding: 'var(--sp-6)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)' }}>
             <p className="t-label" style={{ color: 'var(--steel-300)' }}>Speed Distribution</p>

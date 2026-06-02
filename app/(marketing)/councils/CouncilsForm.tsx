@@ -79,7 +79,7 @@ export default function CouncilsForm() {
       <input name="_gotcha" type="text" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-5)' }}>
+        <div className="cols-form-2" style={{ gap: 'var(--sp-5)' }}>
           <Field label="Full name" error={errors.name} required>
             <input
               name="name"
@@ -108,7 +108,7 @@ export default function CouncilsForm() {
           />
         </Field>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-5)' }}>
+        <div className="cols-form-2" style={{ gap: 'var(--sp-5)' }}>
           <Field label="Email address" error={errors.email} required>
             <input
               name="email"

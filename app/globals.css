@@ -111,3 +111,49 @@ body { font-family: var(--font-sans); font-size: 16px; line-height: 1.6; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+/* ── Overflow protection ──────────────────────────────── */
+html { max-width: 100%; }
+body { overflow-x: hidden; }
+
+/* ── Responsive layout utilities ─────────────────────── */
+/* Two equal columns */
+.cols-2 { display: grid; grid-template-columns: 1fr 1fr; }
+/* Two-thirds / one-third (form + sidebar) */
+.cols-2-1 { display: grid; grid-template-columns: 2fr 1fr; }
+/* Two equal columns inside a form (collapses earlier) */
+.cols-form-2 { display: grid; grid-template-columns: 1fr 1fr; }
+/* Four equal columns (stat cards) */
+.cols-4 { display: grid; grid-template-columns: repeat(4, 1fr); }
+/* Histogram / compliance split */
+.cols-hist { display: grid; grid-template-columns: 2fr 1fr; }
+
+/* Nav horizontal scroll (no visible scrollbar) */
+.nav-scroll { overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
+.nav-scroll::-webkit-scrollbar { display: none; }
+
+@media (max-width: 768px) {
+  /* Collapse two-column layouts to single column */
+  .cols-2   { grid-template-columns: 1fr; }
+  .cols-2-1 { grid-template-columns: 1fr; }
+  .cols-hist { grid-template-columns: 1fr; }
+  /* Stat cards drop to 2×2 */
+  .cols-4 { grid-template-columns: 1fr 1fr; }
+
+  /* Scale down large display headings */
+  .t-display-1 { font-size: 46px; }
+  .t-display-2 { font-size: 34px; }
+}
+
+@media (max-width: 480px) {
+  /* Form rows collapse to single column on phones */
+  .cols-form-2 { grid-template-columns: 1fr; }
+  /* Stat cards go single column on very small screens */
+  .cols-4 { grid-template-columns: 1fr 1fr; }
+
+  /* Further scale down headings */
+  .t-display-1 { font-size: 36px; }
+  .t-display-2 { font-size: 28px; }
+  .t-h1 { font-size: 30px; }
+  .t-h2 { font-size: 24px; }
+}

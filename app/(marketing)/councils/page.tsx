@@ -138,7 +138,7 @@ export default function CouncilsPage() {
 
       {/* ── Legal & regulatory ────────────────────────────────── */}
       <section style={{ background: 'var(--asphalt-800)', borderBottom: '1px solid var(--steel-500)' }}>
-        <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-16)', alignItems: 'start' }}>
+        <div className="cols-2" style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', gap: 'var(--sp-16)', alignItems: 'start' }}>
           <div>
             <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-3)' }}>Legal & Regulatory</p>
             <h2 className="t-h2" style={{ color: 'var(--white)', textTransform: 'uppercase', marginBottom: 'var(--sp-6)' }}>
@@ -168,7 +168,7 @@ export default function CouncilsPage() {
       {/* ── The pilot ─────────────────────────────────────────── */}
       <section style={{ background: 'var(--concrete-50)', borderBottom: 'var(--bd-light)' }}>
         <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-16)', alignItems: 'start' }}>
+          <div className="cols-2" style={{ gap: 'var(--sp-16)', alignItems: 'start' }}>
             <div>
               <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-3)' }}>The Pilot</p>
               <h2 className="t-h2" style={{ color: 'var(--ink)', textTransform: 'uppercase', marginBottom: 'var(--sp-6)' }}>
@@ -233,7 +233,7 @@ export default function CouncilsPage() {
 
       {/* ── Contact ───────────────────────────────────────────── */}
       <section style={{ background: 'var(--concrete-50)' }}>
-        <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--sp-16)', alignItems: 'start' }}>
+        <div className="cols-2-1" style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', gap: 'var(--sp-16)', alignItems: 'start' }}>
           <div>
             <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-3)' }}>Get in Touch</p>
             <h2 className="t-h2" style={{ color: 'var(--ink)', textTransform: 'uppercase', marginBottom: 'var(--sp-5)' }}>

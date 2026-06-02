@@ -44,7 +44,7 @@ export default function HowItWorksPage() {
             Alternate between a silent baseline week and an active feedback week.
             The difference between the two is hard evidence you can put in front of a council.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
+          <div className="cols-2" style={{ gap: 'var(--sp-4)' }}>
             {/* Monitor mode */}
             <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-8)' }}>
               <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-4)' }}>Mode 01</p>
@@ -88,7 +88,7 @@ export default function HowItWorksPage() {
           </div>
 
           {/* Evidence bar */}
-          <div style={{ marginTop: 'var(--sp-8)', background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderLeft: 'var(--bd-accent)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-8)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-10)', alignItems: 'center' }}>
+          <div className="cols-2" style={{ marginTop: 'var(--sp-8)', background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderLeft: 'var(--bd-accent)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-8)', gap: 'var(--sp-10)', alignItems: 'center' }}>
             <div>
               <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-3)' }}>Indicative Evidence</p>
               <h3 className="t-h3" style={{ color: 'var(--white)', textTransform: 'uppercase', marginBottom: 'var(--sp-3)' }}>
@@ -121,7 +121,7 @@ export default function HowItWorksPage() {
 
       {/* ── How it measures speed ─────────────────────────────── */}
       <section style={{ background: 'var(--concrete-50)', borderBottom: 'var(--bd-light)' }}>
-        <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-16)', alignItems: 'start' }}>
+        <div className="cols-2" style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', gap: 'var(--sp-16)', alignItems: 'start' }}>
           <div>
             <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-3)' }}>The Radar</p>
             <h2 className="t-h2" style={{ color: 'var(--ink)', textTransform: 'uppercase', marginBottom: 'var(--sp-6)' }}>
@@ -197,7 +197,7 @@ export default function HowItWorksPage() {
           <h2 className="t-h2" style={{ color: 'var(--white)', textTransform: 'uppercase', marginBottom: 'var(--sp-8)' }}>
             Technical Specification
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-10)' }}>
+          <div className="cols-2" style={{ gap: 'var(--sp-10)' }}>
             {[specs.slice(0, 5), specs.slice(5)].map((half, i) => (
               <div key={i}>
                 {half.map((row, j) => (
@@ -247,7 +247,7 @@ export default function HowItWorksPage() {
 
       {/* ── Simulator callout ────────────────────────────────── */}
       <section style={{ background: 'var(--concrete-50)', borderBottom: 'var(--bd-light)' }}>
-        <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-16)', alignItems: 'center' }}>
+        <div className="cols-2" style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)', gap: 'var(--sp-16)', alignItems: 'center' }}>
           <div>
             <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-3)' }}>Interactive Demo</p>
             <h2 className="t-h2" style={{ color: 'var(--ink)', textTransform: 'uppercase', marginBottom: 'var(--sp-5)' }}>
