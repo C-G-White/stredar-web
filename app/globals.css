@@ -1,0 +1,113 @@
+/* ============================================================
+   STREDAR Design Tokens — synced from stredar/colors_and_type.css
+   ============================================================ */
+:root {
+  /* Structural */
+  --asphalt-900: #0E1013;
+  --asphalt-800: #15181C;
+  --asphalt-700: #1C2025;
+  --asphalt-600: #252A30;
+  --steel-500:   #363C44;
+  --steel-400:   #4C535B;
+  --steel-300:   #6C737C;
+  --steel-200:   #9AA2AB;
+  --steel-100:   #C8CDD3;
+
+  --concrete-50:  #F5F6F7;
+  --concrete-100: #EAECEE;
+  --concrete-200: #DCDFE3;
+  --concrete-300: #C2C7CD;
+  --white:        #FFFFFF;
+  --ink:          #14171A;
+  --ink-2:        #41474E;
+  --ink-3:        #6A717A;
+
+  /* Brand */
+  --hivis-700:  #C9490A;
+  --hivis-600:  #E85A0C;
+  --hivis-500:  #FF6B1A;
+  --hivis-400:  #FF8642;
+  --hivis-300:  #FFA970;
+  --hivis-tint: rgba(255, 107, 26, 0.12);
+  --hivis-glow: 0 6px 20px rgba(255, 107, 26, 0.35);
+
+  /* Signal / speed states */
+  --ok-500:    #19C37D;
+  --ok-tint:   rgba(25, 195, 125, 0.14);
+  --warn-500:  #FFC21A;
+  --warn-tint: rgba(255, 194, 26, 0.16);
+  --over-500:  #F0463C;
+  --over-tint: rgba(240, 70, 60, 0.14);
+  --info-500:  #2E8DFF;
+  --info-tint: rgba(46, 141, 255, 0.14);
+
+  /* LED display */
+  --led-bg:         #08090A;
+  --led-amber:      #FFB200;
+  --led-amber-dim:  rgba(255, 178, 0, 0.14);
+  --led-red:        #FF3B2F;
+  --led-red-dim:    rgba(255, 59, 47, 0.16);
+  --led-green:      #2BE07A;
+  --led-glow-amber: 0 0 18px rgba(255, 178, 0, 0.55);
+  --led-glow-red:   0 0 18px rgba(255, 59, 47, 0.6);
+
+  /* Fonts */
+  --font-display: "Barlow Semi Condensed", "Arial Narrow", sans-serif;
+  --font-sans:    "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, monospace;
+  --font-led:     "Doto", "IBM Plex Mono", monospace;
+
+  /* Spacing */
+  --sp-1: 4px;  --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px;  --sp-8: 32px;  --sp-10: 40px;
+  --sp-12: 48px; --sp-16: 64px; --sp-20: 80px; --sp-24: 96px;
+
+  /* Radii */
+  --r-xs: 3px; --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+  --r-xl: 20px; --r-pill: 999px;
+
+  /* Borders */
+  --bd-light:     1px solid var(--concrete-200);
+  --bd-dark:      1px solid var(--steel-500);
+  --bd-hair-dark: 1px solid var(--steel-400);
+  --bd-accent:    3px solid var(--hivis-500);
+
+  /* Shadows */
+  --sh-1: 0 1px 2px rgba(14, 16, 19, 0.08), 0 1px 1px rgba(14,16,19,0.04);
+  --sh-2: 0 4px 12px rgba(14, 16, 19, 0.10);
+  --sh-3: 0 16px 40px rgba(14, 16, 19, 0.16);
+  --sh-dark-1: 0 1px 0 rgba(255,255,255,0.04) inset, 0 2px 8px rgba(0,0,0,0.4);
+  --sh-dark-2: 0 1px 0 rgba(255,255,255,0.05) inset, 0 12px 30px rgba(0,0,0,0.5);
+
+  /* Motion */
+  --ease-out:    cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur:      200ms;
+  --dur-slow: 360ms;
+
+  /* Layout */
+  --container:      1200px;
+  --container-wide: 1320px;
+}
+
+/* Base reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-sans); font-size: 16px; line-height: 1.6; }
+
+/* Typography helpers */
+.t-display-1 { font-family: var(--font-display); font-size: var(--display-1-size, 76px); font-weight: 800; line-height: 0.96; letter-spacing: -0.01em; }
+.t-display-2 { font-family: var(--font-display); font-size: var(--display-2-size, 54px); font-weight: 800; line-height: 1.0; }
+.t-h1 { font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1.05; }
+.t-h2 { font-family: var(--font-display); font-size: 30px; font-weight: 700; line-height: 1.1; }
+.t-h3 { font-family: var(--font-display); font-size: 22px; font-weight: 600; line-height: 1.2; }
+.t-body-lg { font-family: var(--font-sans); font-size: 19px; line-height: 1.65; }
+.t-body    { font-family: var(--font-sans); font-size: 16px; line-height: 1.6; }
+.t-body-sm { font-family: var(--font-sans); font-size: 14px; line-height: 1.55; }
+.t-label   { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+.t-data    { font-family: var(--font-mono); font-size: 15px; letter-spacing: 0.01em; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
