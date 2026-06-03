@@ -231,7 +231,7 @@ export default function HowItWorksPage() {
           <iframe
             src="/tripod-mockup.html"
             title="SR-1 Tripod Hardware Mockup"
-            style={{ display: 'block', width: 1240, minWidth: 1240, height: 1380, border: 'none' }}
+            style={{ display: 'block', width: 1240, height: 1380, border: 'none', margin: '0 auto' }}
             scrolling="no"
           />
         </div>
