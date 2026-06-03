@@ -216,6 +216,27 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
+      {/* ── Hardware mockup ──────────────────────────────────── */}
+      <section style={{ background: 'var(--asphalt-900)', borderBottom: '1px solid var(--steel-500)', overflow: 'hidden' }}>
+        <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6) 0' }}>
+          <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-3)' }}>The Unit</p>
+          <h2 className="t-h2" style={{ color: 'var(--white)', textTransform: 'uppercase', marginBottom: 'var(--sp-3)' }}>
+            SR-1 on the Tripod
+          </h2>
+          <p className="t-body" style={{ color: 'var(--steel-200)', marginBottom: 'var(--sp-6)' }}>
+            The free-standing deployment: sign head at eye line, tilt-adjustable solar panel below it, battery and charge controller on the weighted folding tripod.
+          </p>
+        </div>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <iframe
+            src="/tripod-mockup.html"
+            title="SR-1 Tripod Hardware Mockup"
+            style={{ display: 'block', width: 1240, minWidth: 1240, height: 1380, border: 'none' }}
+            scrolling="no"
+          />
+        </div>
+      </section>
+
       {/* ── Not enforcement ───────────────────────────────────── */}
       <section style={{ background: 'var(--concrete-50)', borderBottom: 'var(--bd-light)' }}>
         <div style={{ maxWidth: 'var(--container)', margin: '0 auto', padding: 'var(--sp-16) var(--sp-6)' }}>
