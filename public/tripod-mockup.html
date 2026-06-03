@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STRADAR SR-1 — Tripod Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Doto:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --asphalt-900:#0E1013;--asphalt-800:#15181C;--asphalt-700:#1C2025;--asphalt-600:#252A30;
+  --steel-500:#363C44;--steel-400:#4C535B;--steel-300:#6C737C;--steel-200:#9AA2AB;--steel-100:#C8CDD3;
+  --concrete-50:#F5F6F7;--concrete-200:#DCDFE3;--ink:#14171A;--ink-2:#41474E;--ink-3:#6A717A;
+  --hivis-700:#C9490A;--hivis-600:#E85A0C;--hivis-500:#FF6B1A;--hivis-400:#FF8642;--hivis-300:#FFA970;
+  --hivis-tint:rgba(255,107,26,.12);--hivis-glow:0 6px 20px rgba(255,107,26,.35);
+  --ok-500:#19C37D;--ok-tint:rgba(25,195,125,.14);
+  --warn-500:#FFC21A;--warn-tint:rgba(255,194,26,.16);
+  --over-500:#F0463C;--over-tint:rgba(240,70,60,.14);
+  --info-500:#2E8DFF;
+  --led-bg:#08090A;--led-amber:#FFB200;--led-amber-dim:rgba(255,178,0,.14);
+  --led-red:#FF3B2F;--led-red-dim:rgba(255,59,47,.16);--led-green:#2BE07A;
+  --led-glow-amber:0 0 18px rgba(255,178,0,.55);--led-glow-red:0 0 18px rgba(255,59,47,.6);
+  --font-display:"Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --font-sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --font-led:"Doto","IBM Plex Mono",monospace;
+  --r-xs:3px;--r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;--r-pill:999px;
+  --bd-light:1px solid var(--concrete-200);--bd-dark:1px solid var(--steel-500);
+  --bd-hair-dark:1px solid var(--steel-400);--bd-accent:3px solid var(--hivis-500);
+  --sh-1:0 1px 2px rgba(14,16,19,.08),0 1px 1px rgba(14,16,19,.04);
+  --sh-2:0 4px 12px rgba(14,16,19,.10);--sh-3:0 16px 40px rgba(14,16,19,.16);
+  --sh-dark-1:0 1px 0 rgba(255,255,255,.04) inset,0 2px 8px rgba(0,0,0,.4);
+  --sh-dark-2:0 1px 0 rgba(255,255,255,.05) inset,0 12px 30px rgba(0,0,0,.5);
+  --ease-out:cubic-bezier(0.22,0.61,0.36,1);--ease-in-out:cubic-bezier(0.65,0,0.35,1);
+  --dur-fast:120ms;--dur:200ms;--dur-slow:360ms;
+}
+  *{box-sizing:border-box}
+  body{margin:0;background:#0a0c0e;color:var(--steel-100);font-family:var(--font-sans);
+       display:flex;justify-content:center;-webkit-font-smoothing:antialiased}
+  .doc{width:1240px;flex:none;background:var(--asphalt-900)}
+
+  .mast-bar{display:flex;justify-content:space-between;align-items:flex-end;padding:42px 70px 30px;
+            border-bottom:3px solid var(--hivis-500)}
+  .mast-bar .lock{display:flex;align-items:center;gap:14px}
+  .mast-bar .word{font-family:var(--font-display);font-weight:800;font-size:40px;color:#fff;letter-spacing:.02em;line-height:1}
+  .mast-bar .kick{font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--hivis-500);margin-top:4px}
+  .mast-bar .meta{text-align:right;font-family:var(--font-mono);font-size:12px;color:var(--steel-300);line-height:1.8}
+  .mast-bar .meta b{color:#fff;font-weight:600}
+
+  .stage-wrap{padding:30px 70px 20px;
+       background-image:radial-gradient(rgba(120,130,140,.10) 1.2px,transparent 1.2px);background-size:24px 24px}
+  .title{font-family:var(--font-display);font-weight:800;text-transform:uppercase;font-size:38px;color:#fff;margin:6px 0 2px;letter-spacing:-.01em}
+  .lead{font-size:15px;color:var(--steel-300);max-width:70ch;line-height:1.6;margin:0 0 6px}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--hivis-500)}
+
+  .ctrl{display:flex;gap:10px;justify-content:center;margin:6px 0 0}
+  .ctrl button{font-family:var(--font-sans);font-weight:600;font-size:13px;cursor:pointer;padding:9px 16px;
+        border-radius:var(--r-sm);background:var(--asphalt-700);border:1px solid var(--steel-500);color:var(--steel-200);
+        transition:all var(--dur) var(--ease-out)}
+  .ctrl button:hover{color:#fff;border-color:var(--steel-400)}
+  .ctrl button.active{background:var(--hivis-tint);border-color:var(--hivis-600);color:var(--hivis-400)}
+
+  .stage{position:relative;width:1100px;margin:0 auto}
+  .cl-t{font-family:var(--font-sans);font-weight:600;font-size:15px;fill:#fff}
+  .cl-s{font-family:var(--font-mono);font-size:11px;fill:#9AA2AB;letter-spacing:.02em}
+  .cl-n{font-family:var(--font-mono);font-size:11px;font-weight:600;fill:var(--hivis-500)}
+
+  .stripband{display:flex;gap:0;border-top:var(--bd-hair-dark);margin-top:8px}
+  .stripband .cell{flex:1;padding:18px 22px;border-right:1px solid var(--steel-500)}
+  .stripband .cell:last-child{border-right:0}
+  .stripband .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--steel-400)}
+  .stripband .v{font-family:var(--font-mono);font-size:15px;color:#fff;margin-top:6px;font-weight:500}
+
+  .foot{padding:24px 70px 40px;display:flex;justify-content:space-between;align-items:center;
+        font-family:var(--font-mono);font-size:12px;color:var(--steel-400);border-top:var(--bd-hair-dark)}
+  .warn{display:flex;align-items:center;gap:9px;background:var(--warn-tint);border:1px solid rgba(255,194,26,.4);
+        color:#ffd25e;font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;padding:9px 70px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="mast-bar">
+    <div class="lock">
+      <svg width="46" height="46" viewBox="0 0 64 64" fill="none">
+        <circle cx="14" cy="32" r="5" fill="#FF6B1A"/>
+        <path d="M22 20.5 A14 14 0 0 1 22 43.5" stroke="#FF6B1A" stroke-width="5" stroke-linecap="round"/>
+        <path d="M26.6 14 A22 22 0 0 1 26.6 50" stroke="#FF8642" stroke-width="5" stroke-linecap="round"/>
+        <path d="M31.2 7.4 A30 30 0 0 1 31.2 56.6" stroke="#FF8642" stroke-width="5" stroke-linecap="round" opacity="0.55"/>
+      </svg>
+      <div><div class="word">STRADAR</div><div class="kick">Hardware mockup</div></div>
+    </div>
+    <div class="meta">
+      <div><b>SR-1</b> · Tripod deployment</div>
+      <div>Solar panel below head · free-standing</div>
+      <div>Rev A · 3 Jun 2026</div>
+    </div>
+  </div>
+  <div class="warn">⚠ Design intent only — illustrative concept, not a manufacturing drawing. Proportions indicative.</div>
+
+  <div class="stage-wrap">
+    <div class="eyebrow">Complete unit</div>
+    <div class="title">On the tripod</div>
+    <p class="lead">The full SR-1 free-standing: sign head at eye line, the tilt-adjustable solar panel mounted on the mast directly below it, the battery and charge controller lower still, on a weighted folding tripod.</p>
+    <div class="ctrl">
+      <button data-mode="auto" class="active">Auto demo</button>
+      <button data-mode="amber">Your speed</button>
+      <button data-mode="speeding">Over limit</button>
+      <button data-mode="thanks">Slowed down</button>
+    </div>
+
+    <div class="stage">
+      <svg id="fig" width="1100" viewBox="0 0 1100 820" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bezel" x1="0" y1="0" x2="0.6" y2="1">
+            <stop offset="0" stop-color="#2c333b"/><stop offset="0.55" stop-color="#1c2025"/><stop offset="1" stop-color="#13161a"/>
+          </linearGradient>
+          <linearGradient id="metalV" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#191d22"/><stop offset="0.5" stop-color="#3c444d"/><stop offset="1" stop-color="#181c20"/>
+          </linearGradient>
+          <linearGradient id="panel" x1="0" y1="0" x2="0.4" y2="1">
+            <stop offset="0" stop-color="#1d4150"/><stop offset="1" stop-color="#10262f"/>
+          </linearGradient>
+          <radialGradient id="gshadow" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stop-color="#000" stop-opacity="0.5"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="amberglow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- ground -->
+        <ellipse cx="520" cy="742" rx="245" ry="26" fill="url(#gshadow)"/>
+        <line x1="80" y1="742" x2="1020" y2="742" stroke="#3a4047" stroke-width="2"/>
+        <line x1="80" y1="752" x2="1020" y2="752" stroke="#23282d" stroke-width="8" stroke-dasharray="4 12"/>
+
+        <!-- ===== TRIPOD (drawn first, behind mast) ===== -->
+        <!-- rear leg -->
+        <g>
+          <line x1="520" y1="556" x2="545" y2="724" stroke="#1c2024" stroke-width="11" stroke-linecap="round"/>
+          <line x1="520" y1="556" x2="545" y2="724" stroke="#333b42" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="546" cy="730" rx="12" ry="5" fill="#15181c"/>
+        </g>
+        <!-- left leg -->
+        <g>
+          <line x1="512" y1="556" x2="372" y2="722" stroke="#14171b" stroke-width="13" stroke-linecap="round"/>
+          <line x1="512" y1="556" x2="372" y2="722" stroke="#3a424a" stroke-width="5" stroke-linecap="round"/>
+          <path d="M360 720 L 388 720 L 384 734 L 364 734 Z" fill="#23282d" stroke="#3a424a" stroke-width="1"/>
+        </g>
+        <!-- right leg -->
+        <g>
+          <line x1="528" y1="556" x2="668" y2="722" stroke="#14171b" stroke-width="13" stroke-linecap="round"/>
+          <line x1="528" y1="556" x2="668" y2="722" stroke="#3a424a" stroke-width="5" stroke-linecap="round"/>
+          <path d="M656 720 L 684 720 L 680 734 L 660 734 Z" fill="#23282d" stroke="#3a424a" stroke-width="1"/>
+        </g>
+        <!-- spreader braces + hivis knobs -->
+        <line x1="446" y1="650" x2="520" y2="636" stroke="#2c333a" stroke-width="5" stroke-linecap="round"/>
+        <line x1="594" y1="650" x2="520" y2="636" stroke="#2c333a" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="446" cy="650" r="6" fill="#FF6B1A"/>
+        <circle cx="594" cy="650" r="6" fill="#FF6B1A"/>
+        <circle cx="520" cy="636" r="6" fill="#363c44" stroke="#4c535b"/>
+
+        <!-- hub / head of tripod -->
+        <rect x="500" y="528" width="40" height="34" rx="6" fill="url(#metalV)" stroke="#4c535b"/>
+        <circle cx="520" cy="545" r="6" fill="#FF6B1A"/>
+
+        <!-- ===== MAST ===== -->
+        <rect x="511" y="300" width="18" height="236" fill="url(#metalV)" stroke="#10141a" stroke-width="0.8"/>
+
+        <!-- ===== BATTERY + CONTROLLER ENCLOSURE (below panel) ===== -->
+        <g>
+          <rect x="476" y="452" width="88" height="74" rx="9" fill="url(#bezel)" stroke="#4c535b"/>
+          <rect x="486" y="462" width="68" height="6" rx="3" fill="#10141a"/>
+          <line x1="488" y1="500" x2="552" y2="500" stroke="#2a2f35" stroke-width="1"/>
+          <line x1="488" y1="508" x2="552" y2="508" stroke="#2a2f35" stroke-width="1"/>
+          <line x1="488" y1="516" x2="552" y2="516" stroke="#2a2f35" stroke-width="1"/>
+          <circle cx="544" cy="476" r="3.4" fill="#19C37D" filter="url(#amberglow)"/>
+        </g>
+
+        <!-- ===== SOLAR PANEL (mounted on mast, below head, tilt-adjustable) ===== -->
+        <g>
+          <!-- tilt bracket from mast to panel underside -->
+          <path d="M515 360 L 520 410 L 540 404" stroke="#2c333a" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <circle cx="520" cy="372" r="5" fill="#363c44" stroke="#4c535b"/>
+          <!-- panel slab (tilted) -->
+          <path d="M415 372 L 625 350 L 632 372 L 422 396 Z" fill="url(#panel)" stroke="#3a4047" stroke-width="1.5"/>
+          <!-- panel top face frame inner -->
+          <path d="M423 374 L 619 354 L 624 369 L 429 391 Z" fill="none" stroke="#27505f" stroke-width="1"/>
+          <!-- cell grid: lines along length -->
+          <g stroke="#27505f" stroke-width="0.9">
+            <line x1="458" y1="370" x2="465" y2="392"/>
+            <line x1="495" y1="366" x2="502" y2="388"/>
+            <line x1="532" y1="362" x2="539" y2="384"/>
+            <line x1="569" y1="358" x2="576" y2="380"/>
+          </g>
+          <line x1="420" y1="384" x2="628" y2="361" stroke="#27505f" stroke-width="0.9"/>
+        </g>
+
+        <!-- ===== SIGN HEAD UNIT ===== -->
+        <g>
+          <rect x="425" y="70" width="190" height="244" rx="22" fill="url(#bezel)" stroke="#4c535b" stroke-width="1.4"/>
+          <rect x="425" y="70" width="190" height="244" rx="22" fill="none" stroke="#000" stroke-opacity="0.4" stroke-width="0.6"/>
+          <!-- top highlight -->
+          <path d="M447 74 Q520 70 593 74" stroke="#ffffff" stroke-opacity="0.07" stroke-width="2" fill="none"/>
+          <!-- sensor strip -->
+          <circle cx="446" cy="96" r="6" fill="#0e1114" stroke="#2c333a"/>
+          <rect x="468" y="88" width="104" height="18" rx="5" fill="#0e1114" stroke="#2c333a"/>
+          <circle cx="486" cy="97" r="2.4" fill="#3a4047"/><circle cx="498" cy="97" r="2.4" fill="#3a4047"/><circle cx="510" cy="97" r="2.4" fill="#3a4047"/>
+          <circle cx="594" cy="96" r="6" fill="#19C37D" filter="url(#amberglow)"/>
+          <!-- LED screen -->
+          <rect x="444" y="120" width="152" height="142" rx="11" fill="#08090A" stroke="#000"/>
+          <rect x="448" y="124" width="144" height="134" rx="9" fill="none" stroke="#161922"/>
+          <foreignObject x="444" y="120" width="152" height="142">
+            <div xmlns="http://www.w3.org/1999/xhtml" id="screen" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background-image:radial-gradient(rgba(255,178,0,.05) 1px,transparent 1px);background-size:7px 7px;border-radius:9px"></div>
+          </foreignObject>
+          <!-- model plate -->
+          <text x="476" y="296" font-family="var(--font-display)" font-weight="800" font-size="20" fill="#fff" letter-spacing="0.04em">STRADAR</text>
+          <text x="588" y="296" font-family="var(--font-mono)" font-size="11" fill="#9AA2AB" text-anchor="end" letter-spacing="0.06em">SR-1</text>
+        </g>
+
+        <!-- ===== CALLOUTS ===== -->
+        <!-- right side -->
+        <g>
+          <line x1="615" y1="96" x2="742" y2="96" stroke="#6A717A" stroke-width="0.8"/><circle cx="615" cy="96" r="2.4" fill="#6A717A"/>
+          <text class="cl-n" x="752" y="92">B1</text><text class="cl-t" x="752" y="108">Doppler radar + sensors</text><text class="cl-s" x="752" y="124">24 GHz · ambient-light · status</text>
+
+          <line x1="596" y1="190" x2="742" y2="206" stroke="#6A717A" stroke-width="0.8"/><circle cx="596" cy="190" r="2.4" fill="#6A717A"/>
+          <text class="cl-n" x="752" y="202">B2</text><text class="cl-t" x="752" y="218">LED display</text><text class="cl-s" x="752" y="234">speed · feedback faces · alerts</text>
+
+          <line x1="610" y1="290" x2="742" y2="312" stroke="#6A717A" stroke-width="0.8"/><circle cx="610" cy="290" r="2.4" fill="#6A717A"/>
+          <text class="cl-n" x="752" y="308">B3</text><text class="cl-t" x="752" y="324">Sign head</text><text class="cl-s" x="752" y="340">IP66 sealed enclosure</text>
+        </g>
+        <!-- left side -->
+        <g>
+          <line x1="500" y1="372" x2="300" y2="392" stroke="#6A717A" stroke-width="0.8"/><circle cx="500" cy="372" r="2.4" fill="#6A717A"/>
+          <text class="cl-n" x="290" y="382" text-anchor="end">A1</text><text class="cl-t" x="290" y="398" text-anchor="end">Solar panel — below head</text><text class="cl-s" x="290" y="414" text-anchor="end">30 W · tilt-adjustable</text>
+
+          <line x1="476" y1="490" x2="300" y2="498" stroke="#6A717A" stroke-width="0.8"/><circle cx="476" cy="490" r="2.4" fill="#6A717A"/>
+          <text class="cl-n" x="290" y="488" text-anchor="end">A2</text><text class="cl-t" x="290" y="504" text-anchor="end">Battery + MPPT controller</text><text class="cl-s" x="290" y="520" text-anchor="end">LiFePO4 · 7-day reserve</text>
+
+          <line x1="520" y1="545" x2="300" y2="592" stroke="#6A717A" stroke-width="0.8"/><circle cx="520" cy="545" r="2.4" fill="#FF6B1A"/>
+          <text class="cl-n" x="290" y="582" text-anchor="end">A3</text><text class="cl-t" x="290" y="598" text-anchor="end">Quick-release mast clamp</text><text class="cl-s" x="290" y="614" text-anchor="end">tool-free height adjust</text>
+
+          <line x1="430" y1="676" x2="300" y2="688" stroke="#6A717A" stroke-width="0.8"/><circle cx="430" cy="676" r="2.4" fill="#6A717A"/>
+          <text class="cl-n" x="290" y="678" text-anchor="end">A4</text><text class="cl-t" x="290" y="694" text-anchor="end">Folding tripod</text><text class="cl-s" x="290" y="710" text-anchor="end">weighted feet · spreader brace</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="stripband">
+      <div class="cell"><div class="k">Deployed height</div><div class="v">2.1 – 2.5 m</div></div>
+      <div class="cell"><div class="k">Setup time</div><div class="v">&lt; 15 min · tool-free</div></div>
+      <div class="cell"><div class="k">Power</div><div class="v">Solar + 7-day battery</div></div>
+      <div class="cell"><div class="k">Footprint</div><div class="v">≈ 0.9 m tripod spread</div></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div style="display:flex;align-items:center;gap:10px;color:var(--steel-200)">
+      <svg width="22" height="22" viewBox="0 0 64 64" fill="none" style="color:var(--steel-200)">
+        <circle cx="14" cy="32" r="5" fill="#FF6B1A"/>
+        <path d="M22 20.5 A14 14 0 0 1 22 43.5" stroke="#FF6B1A" stroke-width="5" stroke-linecap="round"/>
+        <path d="M26.6 14 A22 22 0 0 1 26.6 50" stroke="currentColor" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+      </svg>
+      STRADAR SR-1 — Tripod mockup
+    </div>
+    <div>© 2026 STRADAR Systems Ltd · Concept / design intent · Rev A</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var screen=document.getElementById('screen');
+  var AMBER='var(--led-amber)',RED='var(--led-red)',GREEN='var(--led-green)';
+  var GA='0 0 16px rgba(255,178,0,.7)',GR='0 0 16px rgba(255,59,47,.7)',GG='0 0 16px rgba(43,224,122,.65)';
+  var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var OVER=47, OK=28, LED="font-family:var(--font-led)";
+
+  function face(mood,color,glow){
+    var mouth = mood==='happy' ? 'M30 60 Q50 80 70 60' : 'M30 74 Q50 54 70 74';
+    return '<svg width="86" height="86" viewBox="0 0 100 100" fill="none" style="filter:drop-shadow('+glow+')">'
+      +'<circle cx="50" cy="50" r="38" stroke="'+color+'" stroke-width="7"/>'
+      +'<circle cx="37" cy="42" r="4.6" fill="'+color+'"/><circle cx="63" cy="42" r="4.6" fill="'+color+'"/>'
+      +'<path d="'+mouth+'" stroke="'+color+'" stroke-width="7" stroke-linecap="round"/></svg>';
+  }
+  function num(sp,color,glow,pre){
+    var sh='color:'+color+';text-shadow:'+glow+';'+LED;
+    return '<div style="'+sh+';font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase">'+pre+'</div>'
+      +'<div style="'+sh+';font-weight:900;font-size:74px;line-height:.82;font-variant-numeric:tabular-nums">'+sp+'</div>'
+      +'<div style="'+sh+';font-weight:700;font-size:12px;letter-spacing:.18em">MPH</div>';
+  }
+  function thanks(color,glow){
+    return face('happy',color,glow)
+      +'<div style="color:'+color+';text-shadow:'+glow+';'+LED+';font-weight:700;font-size:15px;letter-spacing:.16em;text-transform:uppercase;margin-top:6px">Thank you</div>';
+  }
+
+  var mode='auto',start=Date.now();
+  function setMode(m){mode=m;start=Date.now();
+    document.querySelectorAll('.ctrl button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-mode')===m);});
+    render();}
+  document.querySelectorAll('.ctrl button').forEach(function(b){
+    b.addEventListener('click',function(){setMode(b.getAttribute('data-mode'));});});
+
+  function render(){
+    var el=Date.now()-start, phase, lt;
+    if(mode==='auto'){
+      var c=el%9600;
+      if(c<3000){phase='amber';lt=c;}
+      else if(c<6400){phase='speeding';lt=c-3000;}
+      else{phase='thanks';lt=c-6400;}
+    } else {phase=mode;lt=el;}
+
+    if(phase==='amber'){
+      screen.innerHTML=num(OK,AMBER,GA,'Your speed');
+    } else if(phase==='speeding'){
+      if(reduce){screen.innerHTML=num(OVER,RED,GR,'Slow down');return;}
+      var f=Math.floor(lt/640)%2;
+      screen.innerHTML=(f===0)?face('sad',RED,GR):num(OVER,RED,GR,'Slow down');
+    } else {
+      if(reduce){screen.innerHTML=thanks(GREEN,GG);return;}
+      var on=(lt%840)<560;
+      screen.innerHTML=on?thanks(GREEN,GG):'';
+    }
+  }
+  render();
+  setInterval(render, reduce?2000:110);
+})();
+</script>
+</body>
+</html>
