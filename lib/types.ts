@@ -21,7 +21,7 @@ export type Reading = {
 
 export type SiteSummary = Site & {
   reading_count: number
-  avg_speed_mph: number | null
+  max_speed_mph: number | null
   last_reading_at: string | null
 }
 

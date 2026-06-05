@@ -10,7 +10,7 @@ async function getSites(): Promise<SiteRow[]> {
       s.id, s.name, s.description, s.address, s.lat, s.lng,
       s.speed_limit_mph, s.active, s.created_at,
       COUNT(r.id)::int             AS reading_count,
-      ROUND(AVG(r.speed_mph))::int AS avg_speed_mph,
+      MAX(r.speed_mph)::int        AS max_speed_mph,
       MAX(r.recorded_at)           AS last_reading_at,
       (t.recorded_at > now() - interval '90 seconds') AS is_live
     FROM sites s
@@ -46,7 +46,7 @@ export default async function SiteGrid() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--sp-4)' }}>
       {sites.map(site => {
-        const color = speedColor(site.avg_speed_mph, site.speed_limit_mph)
+        const color = speedColor(site.max_speed_mph, site.speed_limit_mph)
         const borderColor = site.is_live ? 'var(--ok-500)' : 'var(--hivis-500)'
         return (
           <Link
@@ -70,10 +70,10 @@ export default async function SiteGrid() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <div>
                 <span style={{ fontFamily: 'var(--font-led)', fontSize: 48, color, lineHeight: 1 }}>
-                  {site.avg_speed_mph ?? '--'}
+                  {site.max_speed_mph ?? '--'}
                 </span>
                 <span className="t-label" style={{ color: 'var(--steel-300)', marginLeft: 'var(--sp-2)' }}>
-                  MPH AVG
+                  MPH MAX
                 </span>
               </div>
               <span className="t-data" style={{ color: 'var(--steel-300)', fontSize: 13 }}>

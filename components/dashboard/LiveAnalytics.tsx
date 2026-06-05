@@ -17,7 +17,7 @@ type DirectionStats = {
 
 type Stats = {
   total: number
-  avg: number | null
+  maxSpeed: number | null
   p85: number | null
   overCount: number
   overPct: number | null
@@ -60,7 +60,7 @@ function dirStats(subset: Reading[], limit: number): DirectionStats {
 
 function compute(readings: Reading[], limit: number): Stats {
   if (!readings.length) {
-    return { total: 0, avg: null, p85: null, overCount: 0, overPct: null, histogram: [], trend: [], recent: [],
+    return { total: 0, maxSpeed: null, p85: null, overCount: 0, overPct: null, histogram: [], trend: [], recent: [],
              approaching: { count: 0, avg: null, p85: null, overPct: null },
              receding:    { count: 0, avg: null, p85: null, overPct: null },
              hasDirectionData: false }
@@ -69,7 +69,7 @@ function compute(readings: Reading[], limit: number): Stats {
   const speeds = readings.map(r => r.speed_mph)
   const sorted = [...speeds].sort((a, b) => a - b)
   const total = readings.length
-  const avg = Math.round(sorted.reduce((s, v) => s + v, 0) / total)
+  const maxSpeed = Math.max(...speeds)
   const p85 = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.85))]
   const overCount = speeds.filter(s => s > limit).length
   const overPct = Math.round((overCount / total) * 100)
@@ -105,7 +105,7 @@ function compute(readings: Reading[], limit: number): Stats {
   const approaching = dirStats(readings.filter(r => r.direction === 1),  limit)
   const receding    = dirStats(readings.filter(r => r.direction === -1), limit)
 
-  return { total, avg, p85, overCount, overPct, histogram, trend, recent, approaching, receding, hasDirectionData }
+  return { total, maxSpeed, p85, overCount, overPct, histogram, trend, recent, approaching, receding, hasDirectionData }
 }
 
 function DirectionComparison({ approaching, receding, limit }: {
@@ -297,7 +297,7 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
 
   const statCards = [
     { label: 'Total Passes',  value: stats.total.toLocaleString(), sub: 'all recorded', color: 'var(--white)' },
-    { label: 'Average Speed', value: stats.avg != null ? `${stats.avg}` : '—', sub: 'MPH', color: stats.avg != null && stats.avg > speedLimitMph ? 'var(--over-500)' : 'var(--white)' },
+    { label: 'Max Speed',     value: stats.maxSpeed != null ? `${stats.maxSpeed}` : '—', sub: 'MPH', color: stats.maxSpeed != null && stats.maxSpeed > speedLimitMph ? 'var(--over-500)' : 'var(--white)' },
     { label: '85th Pct.',     value: stats.p85 != null ? `${stats.p85}` : '—', sub: 'MPH · compliance indicator', color: stats.p85 != null && stats.p85 > speedLimitMph ? 'var(--over-500)' : 'var(--white)' },
     { label: 'Over Limit',    value: stats.overPct != null ? `${stats.overPct}%` : '—', sub: `${stats.overCount.toLocaleString()} passes`, color: (stats.overPct ?? 0) > 15 ? 'var(--over-500)' : (stats.overPct ?? 0) > 5 ? 'var(--warn-500)' : 'var(--ok-500)' },
   ]
