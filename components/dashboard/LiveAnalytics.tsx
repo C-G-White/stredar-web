@@ -8,6 +8,13 @@ type Reading = {
   recorded_at: string
 }
 
+type DirectionStats = {
+  count: number
+  avg: number | null
+  p85: number | null
+  overPct: number | null
+}
+
 type Stats = {
   total: number
   avg: number | null
@@ -17,6 +24,9 @@ type Stats = {
   histogram: HistBin[]
   trend: TrendPoint[]
   recent: Reading[]
+  approaching: DirectionStats
+  receding: DirectionStats
+  hasDirectionData: boolean
 }
 
 type HistBin = {
@@ -36,9 +46,24 @@ type TrendPoint = {
 
 const POLL_INTERVAL = 30_000
 
+function dirStats(subset: Reading[], limit: number): DirectionStats {
+  if (!subset.length) return { count: 0, avg: null, p85: null, overPct: null }
+  const speeds = subset.map(r => r.speed_mph)
+  const sorted = [...speeds].sort((a, b) => a - b)
+  return {
+    count:   subset.length,
+    avg:     Math.round(sorted.reduce((s, v) => s + v, 0) / sorted.length),
+    p85:     sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.85))],
+    overPct: Math.round((speeds.filter(s => s > limit).length / speeds.length) * 100),
+  }
+}
+
 function compute(readings: Reading[], limit: number): Stats {
   if (!readings.length) {
-    return { total: 0, avg: null, p85: null, overCount: 0, overPct: null, histogram: [], trend: [], recent: [] }
+    return { total: 0, avg: null, p85: null, overCount: 0, overPct: null, histogram: [], trend: [], recent: [],
+             approaching: { count: 0, avg: null, p85: null, overPct: null },
+             receding:    { count: 0, avg: null, p85: null, overPct: null },
+             hasDirectionData: false }
   }
 
   const speeds = readings.map(r => r.speed_mph)
@@ -76,7 +101,104 @@ function compute(readings: Reading[], limit: number): Stats {
     .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())
     .slice(0, 25)
 
-  return { total, avg, p85, overCount, overPct, histogram, trend, recent }
+  const hasDirectionData = readings.some(r => r.direction !== null)
+  const approaching = dirStats(readings.filter(r => r.direction === 1),  limit)
+  const receding    = dirStats(readings.filter(r => r.direction === -1), limit)
+
+  return { total, avg, p85, overCount, overPct, histogram, trend, recent, approaching, receding, hasDirectionData }
+}
+
+function DirectionComparison({ approaching, receding, limit }: {
+  approaching: DirectionStats; receding: DirectionStats; limit: number
+}) {
+  const cols: { key: keyof DirectionStats; label: string; unit: string; lowerIsBetter: boolean }[] = [
+    { key: 'avg',     label: 'Avg Speed',   unit: 'MPH', lowerIsBetter: true },
+    { key: 'p85',     label: '85th Pct.',   unit: 'MPH', lowerIsBetter: true },
+    { key: 'overPct', label: 'Over Limit',  unit: '%',   lowerIsBetter: true },
+    { key: 'count',   label: 'Vehicles',    unit: '',    lowerIsBetter: false },
+  ]
+
+  function diffColor(a: number | null, b: number | null, lowerIsBetter: boolean) {
+    if (a == null || b == null || a === b) return 'var(--steel-400)'
+    const approachingIsBetter = lowerIsBetter ? a < b : a > b
+    return approachingIsBetter ? 'var(--ok-500)' : 'var(--over-500)'
+  }
+
+  function diffLabel(a: number | null, b: number | null, unit: string) {
+    if (a == null || b == null) return '—'
+    const d = a - b
+    return (d > 0 ? '+' : '') + d + (unit ? ' ' + unit : '')
+  }
+
+  return (
+    <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
+      <div style={{ padding: 'var(--sp-4) var(--sp-5)', borderBottom: 'var(--bd-dark)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <p className="t-label" style={{ color: 'var(--steel-300)' }}>Direction Comparison</p>
+        <p className="t-label" style={{ color: 'var(--steel-400)' }}>Approaching saw the sign · Receding did not</p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'stretch' }}>
+        {/* Approaching */}
+        <div style={{ padding: 'var(--sp-5)', borderLeft: '3px solid var(--hivis-500)' }}>
+          <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-4)' }}>Approaching ›</p>
+          <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 4, fontSize: 10 }}>Saw the display</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+            {cols.map(col => {
+              const val = approaching[col.key]
+              const other = receding[col.key]
+              return (
+                <div key={col.key}>
+                  <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 2 }}>{col.label}</p>
+                  <p style={{ fontFamily: 'var(--font-led)', fontSize: 28, color: diffColor(val as number | null, other as number | null, col.lowerIsBetter), lineHeight: 1 }}>
+                    {val ?? '—'}{col.unit ? <span style={{ fontSize: 11, marginLeft: 3 }}>{col.unit}</span> : null}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Diff column */}
+        <div style={{ padding: 'var(--sp-5) var(--sp-4)', borderLeft: 'var(--bd-hair-dark)', borderRight: 'var(--bd-hair-dark)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', justifyContent: 'flex-end', paddingTop: 'calc(var(--sp-5) + 12px + var(--sp-4) + 10px)' }}>
+          {cols.map(col => {
+            const a = approaching[col.key] as number | null
+            const b = receding[col.key] as number | null
+            const color = diffColor(a, b, col.lowerIsBetter)
+            return (
+              <div key={col.key} style={{ textAlign: 'center', height: 46, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span className="t-label" style={{ color, fontSize: 11 }}>{diffLabel(a, b, col.unit)}</span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Receding */}
+        <div style={{ padding: 'var(--sp-5)', borderRight: '3px solid var(--steel-400)' }}>
+          <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-4)' }}>‹ Receding</p>
+          <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 4, fontSize: 10 }}>Did not see the display</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+            {cols.map(col => {
+              const val = receding[col.key]
+              return (
+                <div key={col.key}>
+                  <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 2 }}>{col.label}</p>
+                  <p style={{ fontFamily: 'var(--font-led)', fontSize: 28, color: 'var(--steel-200)', lineHeight: 1 }}>
+                    {val ?? '—'}{col.unit ? <span style={{ fontSize: 11, marginLeft: 3 }}>{col.unit}</span> : null}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: 'var(--sp-3) var(--sp-5)', borderTop: 'var(--bd-dark)' }}>
+        <p className="t-label" style={{ color: 'var(--steel-400)', fontSize: 10 }}>
+          Diff column shows approaching minus receding. Green = approaching drivers are slower / more compliant.
+        </p>
+      </div>
+    </div>
+  )
 }
 
 function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
@@ -201,6 +323,11 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
           </div>
         ))}
       </div>
+
+      {/* Direction comparison — only shown when direction data exists */}
+      {stats.hasDirectionData && (
+        <DirectionComparison approaching={stats.approaching} receding={stats.receding} limit={speedLimitMph} />
+      )}
 
       {/* Histogram + compliance */}
       <div className="cols-hist" style={{ gap: 'var(--sp-4)' }}>
