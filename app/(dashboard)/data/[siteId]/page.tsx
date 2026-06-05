@@ -6,9 +6,18 @@ import LiveAnalytics from '@/components/dashboard/LiveAnalytics'
 
 type Props = { params: Promise<{ siteId: string }> }
 
-async function getSite(id: string): Promise<Site | null> {
-  const rows = await sql`SELECT * FROM sites WHERE id = ${id} AND active = true LIMIT 1`
-  return (rows[0] as Site) ?? null
+async function getSite(id: string): Promise<(Site & { is_live: boolean }) | null> {
+  const rows = await sql`
+    SELECT s.*,
+      (t.recorded_at > now() - interval '90 seconds') AS is_live
+    FROM sites s
+    LEFT JOIN LATERAL (
+      SELECT recorded_at FROM telemetry WHERE site_id = s.id ORDER BY recorded_at DESC LIMIT 1
+    ) t ON true
+    WHERE s.id = ${id} AND s.active = true
+    LIMIT 1
+  `
+  return (rows[0] as (Site & { is_live: boolean })) ?? null
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -24,11 +33,9 @@ export default async function SitePage({ params }: Props) {
   const site = await getSite(siteId)
   if (!site) notFound()
 
-  const isDemo = site.address.includes('Norfolk')
-
   return (
     <div style={{ maxWidth: 'var(--container-wide)', margin: '0 auto', padding: 'var(--sp-8) var(--sp-6)' }}>
-      {isDemo && (
+      {!site.is_live && (
         <div style={{ background: 'var(--warn-tint)', border: '1px solid var(--warn-500)', borderRadius: 'var(--r-sm)', padding: 'var(--sp-3) var(--sp-5)', marginBottom: 'var(--sp-6)', display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
           <span className="t-label" style={{ color: 'var(--warn-500)', whiteSpace: 'nowrap' }}>Demo Data</span>
           <span className="t-body-sm" style={{ color: 'var(--steel-200)' }}>Illustrative data — not from a live deployment.</span>
