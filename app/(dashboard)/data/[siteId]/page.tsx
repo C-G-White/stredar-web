@@ -10,7 +10,7 @@ async function getSite(id: string): Promise<(Site & { is_live: boolean; configur
   const rows = await sql`
     SELECT s.*,
       COALESCE(dc.speed_limit_mph, s.speed_limit_mph) AS configured_limit,
-      (t.recorded_at > now() - interval '90 seconds') AS is_live
+      (t.recorded_at > now() - interval '6 minutes') AS is_live
     FROM sites s
     LEFT JOIN device_config dc ON dc.site_id = s.id
     LEFT JOIN LATERAL (
