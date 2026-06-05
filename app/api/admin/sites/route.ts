@@ -17,7 +17,7 @@ export async function GET() {
            WHEN t.recorded_at IS NOT NULL THEN 'stale'
            ELSE 'offline' END AS status,
       (SELECT COUNT(*)::int FROM readings r WHERE r.site_id = s.id AND r.recorded_at > now() - interval '24 hours') AS readings_today,
-      (SELECT COUNT(*)::int FROM readings r WHERE r.site_id = s.id AND r.recorded_at > now() - interval '24 hours' AND r.speed_mph > s.speed_limit_mph) AS violations_today
+      (SELECT COUNT(*)::int FROM readings r WHERE r.site_id = s.id AND r.recorded_at > now() - interval '24 hours' AND r.speed_mph > COALESCE(dc.speed_limit_mph, s.speed_limit_mph)) AS violations_today
     FROM sites s
     LEFT JOIN device_config dc ON dc.site_id = s.id
     LEFT JOIN LATERAL (

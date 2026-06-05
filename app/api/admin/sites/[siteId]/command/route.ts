@@ -17,7 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sit
   }
 
   const { command, params: cmdParams } = body as { command: string; params?: Record<string, unknown> }
-  const validCommands = ['SET_MODE', 'SET_THRESHOLDS', 'SET_AUTO_TIMER', 'SET_TEXTS', 'REBOOT']
+  const validCommands = ['SET_MODE', 'SET_THRESHOLDS', 'SET_AUTO_TIMER', 'SET_TEXTS', 'REBOOT', 'SHUTDOWN']
   if (!validCommands.includes(command)) {
     return NextResponse.json({ error: 'Unknown command' }, { status: 400 })
   }

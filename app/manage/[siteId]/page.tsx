@@ -376,7 +376,7 @@ export default function UnitPage() {
           <div>
             <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 4 }}>Speed limit</p>
             <p style={{ fontFamily: 'var(--font-led)', fontSize: 32, color: 'var(--steel-200)' }}>
-              {site.speed_limit_mph}
+              {config?.speed_limit_mph ?? site.speed_limit_mph}
             </p>
           </div>
         </div>
