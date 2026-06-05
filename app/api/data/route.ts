@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     SELECT
       s.id, s.name, s.address, s.lat, s.lng, s.speed_limit_mph,
       COUNT(r.id)::int          AS reading_count,
-      ROUND(AVG(r.speed_mph))::int AS avg_speed_mph,
+      MAX(r.speed_mph)::int        AS max_speed_mph,
       MAX(r.recorded_at)        AS last_reading_at
     FROM sites s
     LEFT JOIN readings r ON r.site_id = s.id

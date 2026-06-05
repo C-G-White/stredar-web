@@ -29,7 +29,7 @@ export default function SpeedMap({ sites }: Props) {
       }).addTo(map)
 
       sites.forEach(site => {
-        const color = markerColor(site.avg_speed_mph, site.speed_limit_mph)
+        const color = markerColor(site.max_speed_mph, site.speed_limit_mph)
         const icon = L.divIcon({
           html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,.8);box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>`,
           className: '',
@@ -40,7 +40,7 @@ export default function SpeedMap({ sites }: Props) {
           .addTo(map)
           .bindPopup(
             `<strong style="font-family:sans-serif">${site.name}</strong><br>` +
-            `<span style="font-family:monospace">${site.avg_speed_mph ?? '–'} mph avg / ${site.speed_limit_mph} mph limit</span>`
+            `<span style="font-family:monospace">${site.max_speed_mph ?? '–'} mph max / ${site.speed_limit_mph} mph limit</span>`
           )
       })
     })
