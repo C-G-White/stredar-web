@@ -6,18 +6,20 @@ import LiveAnalytics from '@/components/dashboard/LiveAnalytics'
 
 type Props = { params: Promise<{ siteId: string }> }
 
-async function getSite(id: string): Promise<(Site & { is_live: boolean }) | null> {
+async function getSite(id: string): Promise<(Site & { is_live: boolean; configured_limit: number }) | null> {
   const rows = await sql`
     SELECT s.*,
+      COALESCE(dc.speed_limit_mph, s.speed_limit_mph) AS configured_limit,
       (t.recorded_at > now() - interval '90 seconds') AS is_live
     FROM sites s
+    LEFT JOIN device_config dc ON dc.site_id = s.id
     LEFT JOIN LATERAL (
       SELECT recorded_at FROM telemetry WHERE site_id = s.id ORDER BY recorded_at DESC LIMIT 1
     ) t ON true
     WHERE s.id = ${id} AND s.active = true
     LIMIT 1
   `
-  return (rows[0] as (Site & { is_live: boolean })) ?? null
+  return (rows[0] as (Site & { is_live: boolean; configured_limit: number })) ?? null
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -51,7 +53,7 @@ export default async function SitePage({ params }: Props) {
         <h1 className="t-h1" style={{ color: 'var(--white)', textTransform: 'uppercase' }}>{site.name}</h1>
       </div>
 
-      <LiveAnalytics siteId={siteId} speedLimitMph={site.speed_limit_mph} />
+      <LiveAnalytics siteId={siteId} speedLimitMph={site.configured_limit} />
     </div>
   )
 }

@@ -8,18 +8,20 @@ async function getSites(): Promise<SiteRow[]> {
   const rows = await sql`
     SELECT
       s.id, s.name, s.description, s.address, s.lat, s.lng,
-      s.speed_limit_mph, s.active, s.created_at,
+      COALESCE(dc.speed_limit_mph, s.speed_limit_mph) AS speed_limit_mph,
+      s.active, s.created_at,
       COUNT(r.id)::int             AS reading_count,
       MAX(r.speed_mph)::int        AS max_speed_mph,
       MAX(r.recorded_at)           AS last_reading_at,
       (t.recorded_at > now() - interval '90 seconds') AS is_live
     FROM sites s
+    LEFT JOIN device_config dc ON dc.site_id = s.id
     LEFT JOIN readings r ON r.site_id = s.id
     LEFT JOIN LATERAL (
       SELECT recorded_at FROM telemetry WHERE site_id = s.id ORDER BY recorded_at DESC LIMIT 1
     ) t ON true
     WHERE s.active = true
-    GROUP BY s.id, t.recorded_at
+    GROUP BY s.id, dc.speed_limit_mph, t.recorded_at
     ORDER BY is_live DESC, s.name
   `
   return rows as SiteRow[]
