@@ -160,6 +160,7 @@ export default function UnitPage() {
   const [saving, setSaving]       = useState(false)
   const [saveMsg, setSaveMsg]     = useState('')
   const [showReboot, setShowReboot] = useState(false)
+  const [showShutdown, setShowShutdown] = useState(false)
 
   const load = useCallback(async () => {
     const [sitesRes, cfgRes] = await Promise.all([
@@ -215,6 +216,17 @@ export default function UnitPage() {
     setShowReboot(false)
     setSaveMsg('Reboot command queued')
     setTimeout(() => setSaveMsg(''), 4000)
+  }
+
+  async function shutdown() {
+    await fetch(`/api/admin/sites/${siteId}/command`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: 'SHUTDOWN' }),
+    })
+    setShowShutdown(false)
+    setSaveMsg('Shutdown command queued — unit will power off')
+    setTimeout(() => setSaveMsg(''), 6000)
   }
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(config)
@@ -412,21 +424,37 @@ export default function UnitPage() {
           )}
         </div>
 
-        {/* Reboot */}
-        {!showReboot ? (
-          <button
-            onClick={() => setShowReboot(true)}
-            style={{ background: 'none', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--over-500)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, padding: '8px var(--sp-4)', cursor: 'pointer' }}
-          >
-            Reboot unit
-          </button>
-        ) : (
-          <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
-            <span className="t-body-sm" style={{ color: 'var(--steel-200)' }}>Confirm reboot?</span>
-            <button onClick={reboot} style={{ background: 'var(--over-500)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, padding: '8px 14px', cursor: 'pointer' }}>Yes, reboot</button>
-            <button onClick={() => setShowReboot(false)} style={{ background: 'none', border: 'none', color: 'var(--steel-300)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-          </div>
-        )}
+        {/* Reboot / Shutdown */}
+        <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', alignItems: 'center' }}>
+          {!showReboot ? (
+            <button
+              onClick={() => { setShowReboot(true); setShowShutdown(false) }}
+              style={{ background: 'none', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--over-500)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, padding: '8px var(--sp-4)', cursor: 'pointer' }}
+            >
+              Reboot unit
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
+              <span className="t-body-sm" style={{ color: 'var(--steel-200)' }}>Confirm reboot?</span>
+              <button onClick={reboot} style={{ background: 'var(--over-500)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, padding: '8px 14px', cursor: 'pointer' }}>Yes, reboot</button>
+              <button onClick={() => setShowReboot(false)} style={{ background: 'none', border: 'none', color: 'var(--steel-300)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+            </div>
+          )}
+          {!showShutdown ? (
+            <button
+              onClick={() => { setShowShutdown(true); setShowReboot(false) }}
+              style={{ background: 'none', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--steel-300)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, padding: '8px var(--sp-4)', cursor: 'pointer' }}
+            >
+              Shutdown unit
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
+              <span className="t-body-sm" style={{ color: 'var(--warn-500)' }}>Unit will power off. Confirm?</span>
+              <button onClick={shutdown} style={{ background: 'var(--steel-600)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, padding: '8px 14px', cursor: 'pointer' }}>Yes, shut down</button>
+              <button onClick={() => setShowShutdown(false)} style={{ background: 'none', border: 'none', color: 'var(--steel-300)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
