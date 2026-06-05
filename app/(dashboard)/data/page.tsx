@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import SiteGrid from '@/components/dashboard/SiteGrid'
+import AutoRefresh from '@/components/AutoRefresh'
 import sql from '@/lib/db'
 
 export const metadata: Metadata = { title: 'Live Data' }
@@ -21,6 +22,7 @@ export default async function DataPage() {
 
   return (
     <div style={{ maxWidth: 'var(--container-wide)', margin: '0 auto', padding: 'var(--sp-8) var(--sp-6)' }}>
+      <AutoRefresh />
       {live ? (
         <div style={{ background: 'var(--ok-tint)', border: '1px solid var(--ok-500)', borderRadius: 'var(--r-sm)', padding: 'var(--sp-3) var(--sp-5)', marginBottom: 'var(--sp-8)', display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
           <span className="t-label" style={{ color: 'var(--ok-500)', whiteSpace: 'nowrap' }}>Norfolk Pilot</span>
