@@ -11,7 +11,7 @@ async function hasLiveSites(): Promise<boolean> {
   const [row] = await sql`
     SELECT EXISTS (
       SELECT 1 FROM telemetry
-      WHERE recorded_at > now() - interval '6 minutes'
+      WHERE recorded_at > now() - interval '3 minutes'
     ) AS live
   `
   return row.live as boolean

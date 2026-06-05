@@ -13,7 +13,7 @@ async function getSites(): Promise<SiteRow[]> {
       COUNT(r.id)::int             AS reading_count,
       MAX(r.speed_mph)::int        AS max_speed_mph,
       MAX(r.recorded_at)           AS last_reading_at,
-      (t.recorded_at > now() - interval '6 minutes') AS is_live
+      (t.recorded_at > now() - interval '3 minutes') AS is_live
     FROM sites s
     LEFT JOIN device_config dc ON dc.site_id = s.id
     LEFT JOIN readings r ON r.site_id = s.id

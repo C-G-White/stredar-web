@@ -13,7 +13,7 @@ export async function GET() {
       dc.mode,
       t.cpu_temp_c, t.uptime_s, t.radar_connected, t.mode AS current_mode,
       t.firmware_version, t.signal_rssi, t.recorded_at AS last_telemetry_at,
-      CASE WHEN t.recorded_at > now() - interval '6 minutes' THEN 'online'
+      CASE WHEN t.recorded_at > now() - interval '3 minutes' THEN 'online'
            WHEN t.recorded_at IS NOT NULL THEN 'stale'
            ELSE 'offline' END AS status,
       (SELECT COUNT(*)::int FROM readings r WHERE r.site_id = s.id AND r.recorded_at > now() - interval '24 hours') AS readings_today,
