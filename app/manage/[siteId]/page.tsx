@@ -34,7 +34,9 @@ type SiteInfo = {
   status: string; cpu_temp_c: number | null; uptime_s: number | null
   firmware_version: string | null; last_telemetry_at: string | null
   readings_today: number; violations_today: number
-  wifi_networks: string[] | null
+  signal_rssi: number | null; mem_used_pct: number | null
+  wifi_networks: string[] | null; wifi_ssid: string | null
+  connection_type: string | null
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -326,11 +328,15 @@ export default function UnitPage() {
         <Section title="Telemetry">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
             <TelemetryCell label="CPU Temp" value={site.cpu_temp_c != null ? `${site.cpu_temp_c} °C` : '—'} warn={(site.cpu_temp_c ?? 0) > 70} />
-            <TelemetryCell label="Ambient Temp" value="— (sensor TBD)" />
-            <TelemetryCell label="Battery" value="— (sensor TBD)" />
-            <TelemetryCell label="4G Signal" value="— (modem TBD)" />
+            <TelemetryCell label="Memory" value={site.mem_used_pct != null ? `${site.mem_used_pct}%` : '—'} warn={(site.mem_used_pct ?? 0) > 85} />
             <TelemetryCell label="Radar" value={site.status === 'offline' ? 'Disconnected' : 'Connected'} warn={site.status === 'offline'} />
-            <TelemetryCell label="Memory" value="—" />
+            <TelemetryCell label="4G Signal" value={site.signal_rssi != null ? `${site.signal_rssi} dBm` : '—'} />
+            <TelemetryCell
+              label="Connection"
+              value={site.connection_type === 'wifi' ? 'WiFi' : site.connection_type === '4g' ? '4G' : '—'}
+              warn={false}
+            />
+            <TelemetryCell label="WiFi Network" value={site.wifi_ssid ?? '—'} />
           </div>
           {site.last_telemetry_at && (
             <p className="t-label" style={{ color: 'var(--steel-400)', marginTop: 'var(--sp-1)' }}>

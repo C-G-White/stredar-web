@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const {
     cpu_temp_c, ambient_temp_c, battery_mv, uptime_s,
     mem_used_pct, radar_connected, mode, firmware_version, signal_rssi,
-    wifi_networks,
+    wifi_networks, wifi_ssid, connection_type,
   } = body as Record<string, unknown>
 
   const networks = Array.isArray(wifi_networks)
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     INSERT INTO telemetry (
       site_id, cpu_temp_c, ambient_temp_c, battery_mv, uptime_s,
       mem_used_pct, radar_connected, mode, firmware_version, signal_rssi,
-      wifi_networks
+      wifi_networks, wifi_ssid, connection_type
     ) VALUES (
       ${site.id},
       ${typeof cpu_temp_c === 'number' ? cpu_temp_c : null},
@@ -40,7 +40,9 @@ export async function POST(req: NextRequest) {
       ${typeof mode === 'string' ? mode : null},
       ${typeof firmware_version === 'string' ? firmware_version : null},
       ${typeof signal_rssi === 'number' ? signal_rssi : null},
-      ${networks}
+      ${networks},
+      ${typeof wifi_ssid === 'string' ? wifi_ssid : null},
+      ${typeof connection_type === 'string' ? connection_type : null}
     )
   `
 
