@@ -10,7 +10,7 @@ type Reading = {
 
 type DirectionStats = {
   count: number
-  avg: number | null
+  max: number | null
   p85: number | null
   overPct: number | null
 }
@@ -47,12 +47,12 @@ type TrendPoint = {
 const POLL_INTERVAL = 30_000
 
 function dirStats(subset: Reading[], limit: number): DirectionStats {
-  if (!subset.length) return { count: 0, avg: null, p85: null, overPct: null }
+  if (!subset.length) return { count: 0, max: null, p85: null, overPct: null }
   const speeds = subset.map(r => r.speed_mph)
   const sorted = [...speeds].sort((a, b) => a - b)
   return {
     count:   subset.length,
-    avg:     Math.round(sorted.reduce((s, v) => s + v, 0) / sorted.length),
+    max:     Math.max(...speeds),
     p85:     sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.85))],
     overPct: Math.round((speeds.filter(s => s > limit).length / speeds.length) * 100),
   }
@@ -61,8 +61,8 @@ function dirStats(subset: Reading[], limit: number): DirectionStats {
 function compute(readings: Reading[], limit: number): Stats {
   if (!readings.length) {
     return { total: 0, maxSpeed: null, p85: null, overCount: 0, overPct: null, histogram: [], trend: [], recent: [],
-             approaching: { count: 0, avg: null, p85: null, overPct: null },
-             receding:    { count: 0, avg: null, p85: null, overPct: null },
+             approaching: { count: 0, max: null, p85: null, overPct: null },
+             receding:    { count: 0, max: null, p85: null, overPct: null },
              hasDirectionData: false }
   }
 
@@ -112,7 +112,7 @@ function DirectionComparison({ approaching, receding, limit }: {
   approaching: DirectionStats; receding: DirectionStats; limit: number
 }) {
   const cols: { key: keyof DirectionStats; label: string; unit: string; lowerIsBetter: boolean }[] = [
-    { key: 'avg',     label: 'Avg Speed',   unit: 'MPH', lowerIsBetter: true },
+    { key: 'max',     label: 'Max Speed',   unit: 'MPH', lowerIsBetter: true },
     { key: 'p85',     label: '85th Pct.',   unit: 'MPH', lowerIsBetter: true },
     { key: 'overPct', label: 'Over Limit',  unit: '%',   lowerIsBetter: true },
     { key: 'count',   label: 'Vehicles',    unit: '',    lowerIsBetter: false },
