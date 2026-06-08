@@ -166,6 +166,7 @@ export default function UnitPage() {
   const [wifiPass, setWifiPass]         = useState('')
   const [wifiPassVisible, setWifiPassVisible] = useState(false)
   const [showWifiConfirm, setShowWifiConfirm] = useState(false)
+  const [wifiManual, setWifiManual]     = useState(false)
 
   const load = useCallback(async () => {
     const [sitesRes, cfgRes] = await Promise.all([
@@ -244,6 +245,7 @@ export default function UnitPage() {
     setWifiSsid('')
     setWifiPass('')
     setWifiPassVisible(false)
+    setWifiManual(false)
     setSaveMsg(`WiFi command queued — unit will connect to "${wifiSsid}" when in range`)
     setTimeout(() => setSaveMsg(''), 6000)
   }
@@ -412,18 +414,45 @@ export default function UnitPage() {
           <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
             <label className="t-label" style={{ color: 'var(--steel-200)' }}>Network name (SSID)</label>
             {site.wifi_networks?.length ? (
-              <datalist id="wifi-ssid-list">
-                {site.wifi_networks.map(ssid => <option key={ssid} value={ssid} />)}
-              </datalist>
-            ) : null}
-            <input
-              type="text"
-              list={site.wifi_networks?.length ? 'wifi-ssid-list' : undefined}
-              value={wifiSsid}
-              placeholder={site.wifi_networks?.length ? 'Select or type network name' : 'e.g. Village Hall WiFi'}
-              onChange={e => { setWifiSsid(e.target.value); setShowWifiConfirm(false) }}
-              style={{ background: 'var(--asphalt-600)', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--white)', fontFamily: 'var(--font-mono)', fontSize: 14, padding: '10px var(--sp-3)', outline: 'none', width: '100%' }}
-            />
+              <>
+                <select
+                  value={wifiManual ? '__manual__' : wifiSsid}
+                  onChange={e => {
+                    if (e.target.value === '__manual__') {
+                      setWifiManual(true); setWifiSsid('')
+                    } else {
+                      setWifiManual(false); setWifiSsid(e.target.value)
+                    }
+                    setShowWifiConfirm(false)
+                  }}
+                  style={{ background: 'var(--asphalt-600)', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: wifiSsid && !wifiManual ? 'var(--white)' : 'var(--steel-400)', fontFamily: 'var(--font-mono)', fontSize: 14, padding: '10px var(--sp-3)', outline: 'none', width: '100%' }}
+                >
+                  <option value="">Select a network…</option>
+                  {site.wifi_networks.map(ssid => (
+                    <option key={ssid} value={ssid}>{ssid}</option>
+                  ))}
+                  <option value="__manual__">Other (type manually)</option>
+                </select>
+                {wifiManual && (
+                  <input
+                    type="text"
+                    value={wifiSsid}
+                    placeholder="Enter network name"
+                    onChange={e => { setWifiSsid(e.target.value); setShowWifiConfirm(false) }}
+                    style={{ background: 'var(--asphalt-600)', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--white)', fontFamily: 'var(--font-mono)', fontSize: 14, padding: '10px var(--sp-3)', outline: 'none', width: '100%' }}
+                    autoFocus
+                  />
+                )}
+              </>
+            ) : (
+              <input
+                type="text"
+                value={wifiSsid}
+                placeholder="e.g. Village Hall WiFi"
+                onChange={e => { setWifiSsid(e.target.value); setShowWifiConfirm(false) }}
+                style={{ background: 'var(--asphalt-600)', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--white)', fontFamily: 'var(--font-mono)', fontSize: 14, padding: '10px var(--sp-3)', outline: 'none', width: '100%' }}
+              />
+            )}
           </div>
           <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
             <label className="t-label" style={{ color: 'var(--steel-200)' }}>Password</label>
