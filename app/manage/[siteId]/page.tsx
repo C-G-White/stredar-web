@@ -161,6 +161,10 @@ export default function UnitPage() {
   const [saveMsg, setSaveMsg]     = useState('')
   const [showReboot, setShowReboot] = useState(false)
   const [showShutdown, setShowShutdown] = useState(false)
+  const [wifiSsid, setWifiSsid]         = useState('')
+  const [wifiPass, setWifiPass]         = useState('')
+  const [wifiPassVisible, setWifiPassVisible] = useState(false)
+  const [showWifiConfirm, setShowWifiConfirm] = useState(false)
 
   const load = useCallback(async () => {
     const [sitesRes, cfgRes] = await Promise.all([
@@ -226,6 +230,20 @@ export default function UnitPage() {
     })
     setShowShutdown(false)
     setSaveMsg('Shutdown command queued — unit will power off')
+    setTimeout(() => setSaveMsg(''), 6000)
+  }
+
+  async function applyWifi() {
+    await fetch(`/api/admin/sites/${siteId}/command`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: 'SET_WIFI', params: { ssid: wifiSsid, password: wifiPass } }),
+    })
+    setShowWifiConfirm(false)
+    setWifiSsid('')
+    setWifiPass('')
+    setWifiPassVisible(false)
+    setSaveMsg(`WiFi command queued — unit will connect to "${wifiSsid}" when in range`)
     setTimeout(() => setSaveMsg(''), 6000)
   }
 
@@ -378,6 +396,61 @@ export default function UnitPage() {
             <p style={{ fontFamily: 'var(--font-led)', fontSize: 32, color: 'var(--steel-200)' }}>
               {config?.speed_limit_mph ?? site.speed_limit_mph}
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* WiFi configuration */}
+      <div style={{ marginTop: 'var(--sp-4)', background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)' }}>
+        <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-1)' }}>WiFi Network</p>
+        <p className="t-body-sm" style={{ color: 'var(--steel-400)', marginBottom: 'var(--sp-4)' }}>
+          Stores credentials on the unit — connects automatically when in range. Use while the unit is live on 4G.
+        </p>
+        <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+            <label className="t-label" style={{ color: 'var(--steel-200)' }}>Network name (SSID)</label>
+            <input
+              type="text"
+              value={wifiSsid}
+              placeholder="e.g. Village Hall WiFi"
+              onChange={e => { setWifiSsid(e.target.value); setShowWifiConfirm(false) }}
+              style={{ background: 'var(--asphalt-600)', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--white)', fontFamily: 'var(--font-mono)', fontSize: 14, padding: '10px var(--sp-3)', outline: 'none', width: '100%' }}
+            />
+          </div>
+          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+            <label className="t-label" style={{ color: 'var(--steel-200)' }}>Password</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={wifiPassVisible ? 'text' : 'password'}
+                value={wifiPass}
+                placeholder="WiFi password"
+                onChange={e => { setWifiPass(e.target.value); setShowWifiConfirm(false) }}
+                style={{ background: 'var(--asphalt-600)', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--white)', fontFamily: 'var(--font-mono)', fontSize: 14, padding: '10px 40px 10px var(--sp-3)', outline: 'none', width: '100%' }}
+              />
+              <button
+                onClick={() => setWifiPassVisible(v => !v)}
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--steel-400)', cursor: 'pointer', fontSize: 12, fontFamily: 'var(--font-sans)', padding: 0 }}
+              >
+                {wifiPassVisible ? 'HIDE' : 'SHOW'}
+              </button>
+            </div>
+          </div>
+          <div style={{ flex: '0 0 auto', paddingBottom: 0 }}>
+            {!showWifiConfirm ? (
+              <button
+                onClick={() => setShowWifiConfirm(true)}
+                disabled={!wifiSsid.trim()}
+                style={{ background: wifiSsid.trim() ? 'var(--asphalt-600)' : 'var(--asphalt-600)', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: wifiSsid.trim() ? 'var(--steel-100)' : 'var(--steel-500)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, padding: '10px var(--sp-4)', cursor: wifiSsid.trim() ? 'pointer' : 'not-allowed', opacity: wifiSsid.trim() ? 1 : 0.5 }}
+              >
+                Apply WiFi config
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
+                <span className="t-body-sm" style={{ color: 'var(--warn-500)' }}>Send to unit?</span>
+                <button onClick={applyWifi} style={{ background: 'var(--hivis-500)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, padding: '8px 14px', cursor: 'pointer' }}>Yes, apply</button>
+                <button onClick={() => setShowWifiConfirm(false)} style={{ background: 'none', border: 'none', color: 'var(--steel-300)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              </div>
+            )}
           </div>
         </div>
       </div>
