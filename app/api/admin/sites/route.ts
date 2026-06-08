@@ -12,7 +12,7 @@ export async function GET() {
       s.id, s.name, s.address, s.speed_limit_mph, s.active,
       dc.mode,
       t.cpu_temp_c, t.uptime_s, t.radar_connected, t.mode AS current_mode,
-      t.firmware_version, t.signal_rssi, t.recorded_at AS last_telemetry_at,
+      t.firmware_version, t.signal_rssi, t.wifi_networks, t.recorded_at AS last_telemetry_at,
       CASE WHEN t.recorded_at > now() - interval '3 minutes' THEN 'online'
            WHEN t.recorded_at IS NOT NULL THEN 'stale'
            ELSE 'offline' END AS status,

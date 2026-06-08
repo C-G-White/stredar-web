@@ -34,6 +34,7 @@ type SiteInfo = {
   status: string; cpu_temp_c: number | null; uptime_s: number | null
   firmware_version: string | null; last_telemetry_at: string | null
   readings_today: number; violations_today: number
+  wifi_networks: string[] | null
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -405,14 +406,21 @@ export default function UnitPage() {
         <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-1)' }}>WiFi Network</p>
         <p className="t-body-sm" style={{ color: 'var(--steel-400)', marginBottom: 'var(--sp-4)' }}>
           Stores credentials on the unit — connects automatically when in range. Use while the unit is live on 4G.
+          {site.wifi_networks?.length ? ` ${site.wifi_networks.length} network${site.wifi_networks.length !== 1 ? 's' : ''} detected by unit.` : ' No networks detected yet — unit reports visible networks every 90s.'}
         </p>
         <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
             <label className="t-label" style={{ color: 'var(--steel-200)' }}>Network name (SSID)</label>
+            {site.wifi_networks?.length ? (
+              <datalist id="wifi-ssid-list">
+                {site.wifi_networks.map(ssid => <option key={ssid} value={ssid} />)}
+              </datalist>
+            ) : null}
             <input
               type="text"
+              list={site.wifi_networks?.length ? 'wifi-ssid-list' : undefined}
               value={wifiSsid}
-              placeholder="e.g. Village Hall WiFi"
+              placeholder={site.wifi_networks?.length ? 'Select or type network name' : 'e.g. Village Hall WiFi'}
               onChange={e => { setWifiSsid(e.target.value); setShowWifiConfirm(false) }}
               style={{ background: 'var(--asphalt-600)', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--white)', fontFamily: 'var(--font-mono)', fontSize: 14, padding: '10px var(--sp-3)', outline: 'none', width: '100%' }}
             />

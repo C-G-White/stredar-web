@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS telemetry (
   mode             TEXT,
   firmware_version TEXT,
   signal_rssi      INTEGER,  -- NULL when 4G not present
+  wifi_networks    TEXT[],   -- SSIDs visible to the unit at last scan
   recorded_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
