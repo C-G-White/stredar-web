@@ -1,11 +1,9 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import nextDynamic from 'next/dynamic'
 import SiteGrid from '@/components/dashboard/SiteGrid'
+import AllSitesMapWrapper from '@/components/dashboard/AllSitesMapWrapper'
 import AutoRefresh from '@/components/AutoRefresh'
 import sql from '@/lib/db'
-
-const AllSitesMap = nextDynamic(() => import('@/components/dashboard/AllSitesMap'), { ssr: false })
 
 export const metadata: Metadata = { title: 'Live Data' }
 export const dynamic = 'force-dynamic'
@@ -60,7 +58,7 @@ export default async function DataPage() {
           National Speed Data
         </h1>
       </div>
-      <AllSitesMap sites={pins.map(p => ({ ...p, isLive: p.is_live }))} />
+      <AllSitesMapWrapper sites={pins.map(p => ({ ...p, isLive: p.is_live }))} />
       <Suspense fallback={<p className="t-body" style={{ color: 'var(--steel-300)' }}>Loading sites…</p>}>
         <SiteGrid />
       </Suspense>

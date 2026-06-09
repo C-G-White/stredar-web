@@ -1,11 +1,9 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import nextDynamic from 'next/dynamic'
 import sql from '@/lib/db'
 import type { Site } from '@/lib/types'
 import LiveAnalytics from '@/components/dashboard/LiveAnalytics'
-
-const SiteMap = nextDynamic(() => import('@/components/dashboard/SiteMap'), { ssr: false })
+import SiteMapWrapper from '@/components/dashboard/SiteMapWrapper'
 
 type Props = { params: Promise<{ siteId: string }> }
 
@@ -58,7 +56,7 @@ export default async function SitePage({ params }: Props) {
 
       {site.lat !== 0 && site.lng !== 0 && (
         <div style={{ marginBottom: 'var(--sp-8)' }}>
-          <SiteMap lat={site.lat} lng={site.lng} label={site.name} />
+          <SiteMapWrapper lat={site.lat} lng={site.lng} label={site.name} />
         </div>
       )}
 
