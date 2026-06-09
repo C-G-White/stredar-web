@@ -38,6 +38,7 @@ type SiteInfo = {
   radar_connected: boolean | null; display_connected: boolean | null
   wifi_networks: string[] | null; wifi_ssid: string | null
   connection_type: string | null
+  lat: number | null; lng: number | null
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -49,6 +50,13 @@ function formatUptime(s: number | null) {
 
 function statusColor(s: string) {
   return s === 'online' ? 'var(--ok-500)' : s === 'stale' ? 'var(--warn-500)' : 'var(--steel-400)'
+}
+
+function formatGPS(lat: number | null, lng: number | null) {
+  if (lat == null || lng == null || (lat === 0 && lng === 0)) return 'No fix'
+  const latStr = `${Math.abs(lat).toFixed(5)}° ${lat >= 0 ? 'N' : 'S'}`
+  const lngStr = `${Math.abs(lng).toFixed(5)}° ${lng >= 0 ? 'E' : 'W'}`
+  return `${latStr}, ${lngStr}`
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -331,14 +339,17 @@ export default function UnitPage() {
             <TelemetryCell label="CPU Temp" value={site.cpu_temp_c != null ? `${site.cpu_temp_c} °C` : '—'} warn={(site.cpu_temp_c ?? 0) > 70} />
             <TelemetryCell label="Memory" value={site.mem_used_pct != null ? `${site.mem_used_pct}%` : '—'} warn={(site.mem_used_pct ?? 0) > 85} />
             <TelemetryCell label="4G Signal" value={site.signal_rssi != null ? `${site.signal_rssi} dBm` : '—'} />
-            <TelemetryCell label="Radar" value={site.radar_connected === false ? 'NOT CONNECTED' : site.radar_connected === true ? 'Connected' : '—'} warn={site.radar_connected === false} />
-            <TelemetryCell label="LED Display" value={site.display_connected === false ? 'NOT CONNECTED' : site.display_connected === true ? 'Connected' : '—'} warn={site.display_connected === false} />
+            <TelemetryCell label="Radar" value={site.radar_connected === false ? 'NOT CONNECTED' : site.radar_connected === true ? 'CONNECTED' : '—'} warn={site.radar_connected === false} />
+            <TelemetryCell label="LED Display" value={site.display_connected === false ? 'NOT CONNECTED' : site.display_connected === true ? 'CONNECTED' : '—'} warn={site.display_connected === false} />
             <TelemetryCell
               label="Connection"
               value={site.connection_type === 'wifi' ? 'WiFi' : site.connection_type === '4g' ? '4G' : '—'}
               warn={false}
             />
             <TelemetryCell label="WiFi Network" value={site.wifi_ssid ?? '—'} />
+            <div style={{ gridColumn: 'span 2' }}>
+              <TelemetryCell label="GPS" value={formatGPS(site.lat, site.lng)} />
+            </div>
           </div>
           {site.last_telemetry_at && (
             <p className="t-label" style={{ color: 'var(--steel-400)', marginTop: 'var(--sp-1)' }}>

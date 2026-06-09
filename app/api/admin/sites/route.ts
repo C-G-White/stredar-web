@@ -9,7 +9,7 @@ export async function GET() {
 
   const rows = await sql`
     SELECT
-      s.id, s.name, s.address, s.speed_limit_mph, s.active,
+      s.id, s.name, s.address, s.speed_limit_mph, s.active, s.lat, s.lng,
       dc.mode,
       t.cpu_temp_c, t.uptime_s, t.radar_connected, t.display_connected, t.mode AS current_mode,
       t.firmware_version, t.signal_rssi, t.mem_used_pct, t.wifi_networks, t.wifi_ssid, t.connection_type, t.recorded_at AS last_telemetry_at,

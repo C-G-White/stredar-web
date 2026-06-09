@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS telemetry (
   battery_mv       INTEGER,
   uptime_s         INTEGER,
   mem_used_pct     REAL,
-  radar_connected  BOOLEAN,
+  radar_connected   BOOLEAN,
+  display_connected BOOLEAN,
   mode             TEXT,
   firmware_version TEXT,
   signal_rssi      INTEGER,
@@ -49,6 +50,12 @@ CREATE TABLE IF NOT EXISTS commands (
 
 CREATE INDEX IF NOT EXISTS commands_site_status
   ON commands (site_id, status, created_at);
+
+-- ── Add columns that may be missing from older installs ──────────────────────
+ALTER TABLE telemetry ADD COLUMN IF NOT EXISTS display_connected BOOLEAN;
+ALTER TABLE telemetry ADD COLUMN IF NOT EXISTS wifi_networks TEXT[];
+ALTER TABLE telemetry ADD COLUMN IF NOT EXISTS wifi_ssid TEXT;
+ALTER TABLE telemetry ADD COLUMN IF NOT EXISTS connection_type TEXT;
 
 -- ── Per-device api_key: generate for any site that doesn't have one ───────────
 UPDATE sites

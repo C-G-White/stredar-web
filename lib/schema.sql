@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS telemetry (
   battery_mv       INTEGER,  -- NULL until INA219 sensor fitted
   uptime_s         INTEGER,
   mem_used_pct     REAL,
-  radar_connected  BOOLEAN,
+  radar_connected   BOOLEAN,
+  display_connected BOOLEAN,
   mode             TEXT,
   firmware_version TEXT,
   signal_rssi      INTEGER,  -- NULL when 4G not present
