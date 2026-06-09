@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   const {
     cpu_temp_c, ambient_temp_c, battery_mv, uptime_s,
-    mem_used_pct, radar_connected, mode, firmware_version, signal_rssi,
+    mem_used_pct, radar_connected, display_connected, mode, firmware_version, signal_rssi,
     wifi_networks, wifi_ssid, connection_type,
   } = body as Record<string, unknown>
 
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   await sql`
     INSERT INTO telemetry (
       site_id, cpu_temp_c, ambient_temp_c, battery_mv, uptime_s,
-      mem_used_pct, radar_connected, mode, firmware_version, signal_rssi,
+      mem_used_pct, radar_connected, display_connected, mode, firmware_version, signal_rssi,
       wifi_networks, wifi_ssid, connection_type
     ) VALUES (
       ${site.id},
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
       ${typeof uptime_s === 'number' ? uptime_s : null},
       ${typeof mem_used_pct === 'number' ? mem_used_pct : null},
       ${typeof radar_connected === 'boolean' ? radar_connected : null},
+      ${typeof display_connected === 'boolean' ? display_connected : null},
       ${typeof mode === 'string' ? mode : null},
       ${typeof firmware_version === 'string' ? firmware_version : null},
       ${typeof signal_rssi === 'number' ? signal_rssi : null},

@@ -35,6 +35,7 @@ type SiteInfo = {
   firmware_version: string | null; last_telemetry_at: string | null
   readings_today: number; violations_today: number
   signal_rssi: number | null; mem_used_pct: number | null
+  radar_connected: boolean | null; display_connected: boolean | null
   wifi_networks: string[] | null; wifi_ssid: string | null
   connection_type: string | null
 }
@@ -326,11 +327,12 @@ export default function UnitPage() {
 
         {/* Telemetry */}
         <Section title="Telemetry">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-4)' }}>
             <TelemetryCell label="CPU Temp" value={site.cpu_temp_c != null ? `${site.cpu_temp_c} °C` : '—'} warn={(site.cpu_temp_c ?? 0) > 70} />
             <TelemetryCell label="Memory" value={site.mem_used_pct != null ? `${site.mem_used_pct}%` : '—'} warn={(site.mem_used_pct ?? 0) > 85} />
-            <TelemetryCell label="Radar" value={site.status === 'offline' ? 'Disconnected' : 'Connected'} warn={site.status === 'offline'} />
             <TelemetryCell label="4G Signal" value={site.signal_rssi != null ? `${site.signal_rssi} dBm` : '—'} />
+            <TelemetryCell label="Radar" value={site.radar_connected === false ? 'NOT CONNECTED' : site.radar_connected === true ? 'Connected' : '—'} warn={site.radar_connected === false} />
+            <TelemetryCell label="LED Display" value={site.display_connected === false ? 'NOT CONNECTED' : site.display_connected === true ? 'Connected' : '—'} warn={site.display_connected === false} />
             <TelemetryCell
               label="Connection"
               value={site.connection_type === 'wifi' ? 'WiFi' : site.connection_type === '4g' ? '4G' : '—'}
