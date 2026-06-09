@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const {
     cpu_temp_c, ambient_temp_c, battery_mv, uptime_s,
     mem_used_pct, radar_connected, display_connected, mode, firmware_version, signal_rssi,
-    wifi_networks, wifi_ssid, connection_type,
+    wifi_networks, wifi_ssid, connection_type, lat, lon, alt_m,
   } = body as Record<string, unknown>
 
   const networks = Array.isArray(wifi_networks)
@@ -46,6 +46,10 @@ export async function POST(req: NextRequest) {
       ${typeof connection_type === 'string' ? connection_type : null}
     )
   `
+
+  if (typeof lat === 'number' && typeof lon === 'number' && lat !== 0 && lon !== 0) {
+    await sql`UPDATE sites SET lat = ${lat}, lng = ${lon} WHERE id = ${site.id}`
+  }
 
   return NextResponse.json({ ok: true })
 }

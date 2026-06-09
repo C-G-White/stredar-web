@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import nextDynamic from 'next/dynamic'
 import SiteGrid from '@/components/dashboard/SiteGrid'
 import AutoRefresh from '@/components/AutoRefresh'
 import sql from '@/lib/db'
+
+const AllSitesMap = nextDynamic(() => import('@/components/dashboard/AllSitesMap'), { ssr: false })
 
 export const metadata: Metadata = { title: 'Live Data' }
 export const dynamic = 'force-dynamic'
@@ -17,8 +20,21 @@ async function hasLiveSites(): Promise<boolean> {
   return row.live as boolean
 }
 
+async function getSitePins() {
+  const rows = await sql`
+    SELECT s.id, s.name, s.address, s.lat, s.lng,
+      (t.recorded_at > now() - interval '3 minutes') AS is_live
+    FROM sites s
+    LEFT JOIN LATERAL (
+      SELECT recorded_at FROM telemetry WHERE site_id = s.id ORDER BY recorded_at DESC LIMIT 1
+    ) t ON true
+    WHERE s.active = true
+  `
+  return rows as { id: string; name: string; address: string; lat: number; lng: number; is_live: boolean }[]
+}
+
 export default async function DataPage() {
-  const live = await hasLiveSites()
+  const [live, pins] = await Promise.all([hasLiveSites(), getSitePins()])
 
   return (
     <div style={{ maxWidth: 'var(--container-wide)', margin: '0 auto', padding: 'var(--sp-8) var(--sp-6)' }}>
@@ -44,6 +60,7 @@ export default async function DataPage() {
           National Speed Data
         </h1>
       </div>
+      <AllSitesMap sites={pins.map(p => ({ ...p, isLive: p.is_live }))} />
       <Suspense fallback={<p className="t-body" style={{ color: 'var(--steel-300)' }}>Loading sites…</p>}>
         <SiteGrid />
       </Suspense>

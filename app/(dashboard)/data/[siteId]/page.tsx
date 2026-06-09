@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import nextDynamic from 'next/dynamic'
 import sql from '@/lib/db'
 import type { Site } from '@/lib/types'
 import LiveAnalytics from '@/components/dashboard/LiveAnalytics'
+
+const SiteMap = nextDynamic(() => import('@/components/dashboard/SiteMap'), { ssr: false })
 
 type Props = { params: Promise<{ siteId: string }> }
 
@@ -52,6 +55,12 @@ export default async function SitePage({ params }: Props) {
         <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-2)' }}>{site.address}</p>
         <h1 className="t-h1" style={{ color: 'var(--white)', textTransform: 'uppercase' }}>{site.name}</h1>
       </div>
+
+      {site.lat !== 0 && site.lng !== 0 && (
+        <div style={{ marginBottom: 'var(--sp-8)' }}>
+          <SiteMap lat={site.lat} lng={site.lng} label={site.name} />
+        </div>
+      )}
 
       <LiveAnalytics siteId={siteId} speedLimitMph={site.configured_limit} />
     </div>
