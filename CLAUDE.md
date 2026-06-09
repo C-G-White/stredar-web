@@ -2,6 +2,10 @@
 
 Next.js 15 website for the Stredar community speed initiative. Two purposes on one domain: public marketing and live national speed data dashboard.
 
+## Working instructions
+
+At the start of every task, check Causantic long-term memory for relevant context using `/causantic-search` or `/causantic-recall`. Past decisions, schema changes, hardware quirks, and design rationale are stored there and should inform the work before reading code.
+
 ## Running locally
 
 ```bash
