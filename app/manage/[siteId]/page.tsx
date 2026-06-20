@@ -173,6 +173,8 @@ export default function UnitPage() {
   const [saveMsg, setSaveMsg]     = useState('')
   const [showReboot, setShowReboot] = useState(false)
   const [showShutdown, setShowShutdown] = useState(false)
+  const [showReset, setShowReset] = useState(false)
+  const [resetting, setResetting] = useState(false)
   const [wifiSsid, setWifiSsid]         = useState('')
   const [wifiPass, setWifiPass]         = useState('')
   const [wifiPassVisible, setWifiPassVisible] = useState(false)
@@ -243,6 +245,21 @@ export default function UnitPage() {
     })
     setShowShutdown(false)
     setSaveMsg('Shutdown command queued — unit will power off')
+    setTimeout(() => setSaveMsg(''), 6000)
+  }
+
+  async function resetData() {
+    setResetting(true)
+    const r = await fetch(`/api/admin/sites/${siteId}/reset`, { method: 'DELETE' })
+    setShowReset(false)
+    setResetting(false)
+    if (r.ok) {
+      const { deleted_readings } = await r.json()
+      setSaveMsg(`Reset complete — ${deleted_readings.toLocaleString()} readings deleted`)
+      load()
+    } else {
+      setSaveMsg('Reset failed')
+    }
     setTimeout(() => setSaveMsg(''), 6000)
   }
 
@@ -553,11 +570,11 @@ export default function UnitPage() {
           )}
         </div>
 
-        {/* Reboot / Shutdown */}
+        {/* Reboot / Shutdown / Reset */}
         <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', alignItems: 'center' }}>
           {!showReboot ? (
             <button
-              onClick={() => { setShowReboot(true); setShowShutdown(false) }}
+              onClick={() => { setShowReboot(true); setShowShutdown(false); setShowReset(false) }}
               style={{ background: 'none', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--over-500)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, padding: '8px var(--sp-4)', cursor: 'pointer' }}
             >
               Reboot unit
@@ -571,7 +588,7 @@ export default function UnitPage() {
           )}
           {!showShutdown ? (
             <button
-              onClick={() => { setShowShutdown(true); setShowReboot(false) }}
+              onClick={() => { setShowShutdown(true); setShowReboot(false); setShowReset(false) }}
               style={{ background: 'none', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--steel-300)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, padding: '8px var(--sp-4)', cursor: 'pointer' }}
             >
               Shutdown unit
@@ -581,6 +598,22 @@ export default function UnitPage() {
               <span className="t-body-sm" style={{ color: 'var(--warn-500)' }}>Unit will power off. Confirm?</span>
               <button onClick={shutdown} style={{ background: 'var(--steel-600)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, padding: '8px 14px', cursor: 'pointer' }}>Yes, shut down</button>
               <button onClick={() => setShowShutdown(false)} style={{ background: 'none', border: 'none', color: 'var(--steel-300)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+            </div>
+          )}
+          {!showReset ? (
+            <button
+              onClick={() => { setShowReset(true); setShowReboot(false); setShowShutdown(false) }}
+              style={{ background: 'none', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--steel-300)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, padding: '8px var(--sp-4)', cursor: 'pointer' }}
+            >
+              Reset site data
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
+              <span className="t-body-sm" style={{ color: 'var(--over-500)' }}>Delete all readings? Cannot be undone.</span>
+              <button onClick={resetData} disabled={resetting} style={{ background: 'var(--over-500)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, padding: '8px 14px', cursor: resetting ? 'wait' : 'pointer', opacity: resetting ? 0.6 : 1 }}>
+                {resetting ? 'Deleting…' : 'Yes, reset'}
+              </button>
+              <button onClick={() => setShowReset(false)} style={{ background: 'none', border: 'none', color: 'var(--steel-300)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
             </div>
           )}
         </div>
