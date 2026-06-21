@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { site_id, speed_mph, direction, recorded_at } = body as Record<string, unknown>
+  const { site_id, speed_mph, direction, recorded_at, entry_speed_mph, exit_speed_mph } = body as Record<string, unknown>
 
   // Per-device key: site_id must match the key's site; legacy key: trust the payload
   const resolved_site_id = site_id_from_key ?? site_id
@@ -35,10 +35,12 @@ export async function POST(req: NextRequest) {
   }
 
   const dir = direction === 1 || direction === -1 ? direction : null
+  const entry = typeof entry_speed_mph === 'number' && entry_speed_mph >= 0 && entry_speed_mph <= 200 ? Math.round(entry_speed_mph) : null
+  const exit_s = typeof exit_speed_mph === 'number' && exit_speed_mph >= 0 && exit_speed_mph <= 200 ? Math.round(exit_speed_mph) : null
 
   await sql`
-    INSERT INTO readings (site_id, speed_mph, direction, recorded_at)
-    VALUES (${resolved_site_id}, ${speed_mph}, ${dir}, ${recorded_at})
+    INSERT INTO readings (site_id, speed_mph, direction, entry_speed_mph, exit_speed_mph, recorded_at)
+    VALUES (${resolved_site_id}, ${speed_mph}, ${dir}, ${entry}, ${exit_s}, ${recorded_at})
   `
 
   return NextResponse.json({ ok: true })

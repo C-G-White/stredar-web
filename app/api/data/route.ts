@@ -7,14 +7,14 @@ export async function GET(req: NextRequest) {
 
   if (siteId) {
     const rows = await sql`
-      SELECT speed_mph, direction, recorded_at
+      SELECT speed_mph, direction, entry_speed_mph, exit_speed_mph, recorded_at
       FROM readings
       WHERE site_id = ${siteId}
       ORDER BY recorded_at DESC
       LIMIT 1000
     `
     return NextResponse.json(rows, {
-      headers: { 'Cache-Control': 's-maxage=30, stale-while-revalidate=60' },
+      headers: { 'Cache-Control': 's-maxage=10, stale-while-revalidate=20' },
     })
   }
 

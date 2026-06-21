@@ -15,12 +15,14 @@ CREATE TABLE IF NOT EXISTS sites (
 );
 
 CREATE TABLE IF NOT EXISTS readings (
-  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  site_id     UUID        NOT NULL REFERENCES sites(id),
-  speed_mph   INTEGER     NOT NULL,
-  direction   SMALLINT,   -- 1 = inbound, -1 = outbound, NULL = unknown
-  recorded_at TIMESTAMPTZ NOT NULL,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  site_id          UUID        NOT NULL REFERENCES sites(id),
+  speed_mph        INTEGER     NOT NULL,
+  direction        SMALLINT,   -- 1 = inbound, -1 = outbound, NULL = unknown
+  entry_speed_mph  SMALLINT,   -- first confirmed speed (display mode inbound only)
+  exit_speed_mph   SMALLINT,   -- final speed as vehicle left (display mode inbound only)
+  recorded_at      TIMESTAMPTZ NOT NULL,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- Covering index for per-site time-ordered queries

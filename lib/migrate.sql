@@ -57,6 +57,13 @@ ALTER TABLE telemetry ADD COLUMN IF NOT EXISTS wifi_networks TEXT[];
 ALTER TABLE telemetry ADD COLUMN IF NOT EXISTS wifi_ssid TEXT;
 ALTER TABLE telemetry ADD COLUMN IF NOT EXISTS connection_type TEXT;
 
+-- ── Per-vehicle speed tracking (display mode effectiveness) ─────────────────
+-- entry_speed_mph: speed when vehicle was first confirmed (before seeing display)
+-- exit_speed_mph:  speed on final reading (after display has had a chance to act)
+-- Both NULL for monitor mode readings and outbound passes.
+ALTER TABLE readings ADD COLUMN IF NOT EXISTS entry_speed_mph SMALLINT;
+ALTER TABLE readings ADD COLUMN IF NOT EXISTS exit_speed_mph  SMALLINT;
+
 -- ── Per-device api_key: generate for any site that doesn't have one ───────────
 UPDATE sites
 SET api_key = encode(gen_random_bytes(24), 'hex')

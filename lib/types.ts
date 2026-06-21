@@ -15,6 +15,8 @@ export type Reading = {
   site_id: string
   speed_mph: number
   direction: 1 | -1 | null  // 1 = inbound, -1 = outbound
+  entry_speed_mph?: number | null  // display mode inbound only: speed on first detection
+  exit_speed_mph?: number | null   // display mode inbound only: speed as vehicle left
   recorded_at: string
   created_at: string
 }

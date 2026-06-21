@@ -6,6 +6,8 @@ type Reading = {
   speed_mph: number
   direction: number | null
   recorded_at: string
+  entry_speed_mph?: number | null
+  exit_speed_mph?: number | null
 }
 
 type DirectionStats = {
@@ -13,6 +15,19 @@ type DirectionStats = {
   max: number | null
   p85: number | null
   overPct: number | null
+}
+
+type DisplayEffect = {
+  count: number
+  avgEntry: number | null
+  avgExit: number | null
+  avgDelta: number | null
+  alreadyCompliantCount: number
+  alreadyCompliantPct: number
+  respondedCount: number
+  respondedPct: number
+  stillOverCount: number
+  stillOverPct: number
 }
 
 type Stats = {
@@ -27,12 +42,13 @@ type Stats = {
   approaching: DirectionStats
   receding: DirectionStats
   hasDirectionData: boolean
+  displayEffect: DisplayEffect | null
 }
 
 type HistBin = {
   label: string
   count: number
-  pct: number  // 0–100 of max bin
+  pct: number
   isOver: boolean
   isWarn: boolean
 }
@@ -44,7 +60,11 @@ type TrendPoint = {
   isWarn: boolean
 }
 
-const POLL_INTERVAL = 30_000
+const POLL_INTERVAL = 10_000
+
+function avg(ns: number[]): number | null {
+  return ns.length ? Math.round(ns.reduce((a, b) => a + b, 0) / ns.length) : null
+}
 
 function dirStats(subset: Reading[], limit: number): DirectionStats {
   if (!subset.length) return { count: 0, max: null, p85: null, overPct: null }
@@ -59,12 +79,14 @@ function dirStats(subset: Reading[], limit: number): DirectionStats {
 }
 
 function compute(readings: Reading[], limit: number): Stats {
-  if (!readings.length) {
-    return { total: 0, maxSpeed: null, p85: null, overCount: 0, overPct: null, histogram: [], trend: [], recent: [],
-             approaching: { count: 0, max: null, p85: null, overPct: null },
-             receding:    { count: 0, max: null, p85: null, overPct: null },
-             hasDirectionData: false }
+  const empty: Stats = {
+    total: 0, maxSpeed: null, p85: null, overCount: 0, overPct: null,
+    histogram: [], trend: [], recent: [],
+    approaching: { count: 0, max: null, p85: null, overPct: null },
+    receding:    { count: 0, max: null, p85: null, overPct: null },
+    hasDirectionData: false, displayEffect: null,
   }
+  if (!readings.length) return empty
 
   const speeds = readings.map(r => r.speed_mph)
   const sorted = [...speeds].sort((a, b) => a - b)
@@ -74,7 +96,6 @@ function compute(readings: Reading[], limit: number): Stats {
   const overCount = speeds.filter(s => s > limit).length
   const overPct = Math.round((overCount / total) * 100)
 
-  // 5 mph histogram bins
   const minBin = Math.floor(Math.min(...speeds) / 5) * 5
   const maxBin = Math.ceil(Math.max(...speeds) / 5) * 5
   const rawBins: HistBin[] = []
@@ -85,7 +106,6 @@ function compute(readings: Reading[], limit: number): Stats {
   const maxCount = Math.max(...rawBins.map(b => b.count), 1)
   const histogram = rawBins.map(b => ({ ...b, pct: Math.round((b.count / maxCount) * 100) }))
 
-  // Trend — last 60 readings in chronological order
   const trend = [...readings]
     .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
     .slice(-60)
@@ -96,7 +116,6 @@ function compute(readings: Reading[], limit: number): Stats {
       isWarn: r.speed_mph > limit * 0.9 && r.speed_mph <= limit,
     }))
 
-  // Recent passes — latest 25
   const recent = [...readings]
     .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())
     .slice(0, 25)
@@ -105,7 +124,86 @@ function compute(readings: Reading[], limit: number): Stats {
   const approaching = dirStats(readings.filter(r => r.direction === 1),  limit)
   const receding    = dirStats(readings.filter(r => r.direction === -1), limit)
 
-  return { total, maxSpeed, p85, overCount, overPct, histogram, trend, recent, approaching, receding, hasDirectionData }
+  // Display effectiveness — inbound passes with entry/exit speed data
+  const displayInbound = readings.filter(r => r.entry_speed_mph != null && r.direction === 1)
+  let displayEffect: DisplayEffect | null = null
+  if (displayInbound.length > 0) {
+    const withExit = displayInbound.filter(r => r.exit_speed_mph != null)
+    const avgEntry = avg(displayInbound.map(r => r.entry_speed_mph!))
+    const avgExit  = avg(withExit.map(r => r.exit_speed_mph!))
+    const avgDelta = avgEntry != null && avgExit != null ? avgEntry - avgExit : null
+
+    const n            = displayInbound.length
+    const alreadyOk    = displayInbound.filter(r => r.entry_speed_mph! <= limit)
+    const responded    = displayInbound.filter(r => r.entry_speed_mph! > limit && r.exit_speed_mph != null && r.exit_speed_mph <= limit)
+    const stillOver    = displayInbound.filter(r => r.entry_speed_mph! > limit && (r.exit_speed_mph == null || r.exit_speed_mph > limit))
+
+    displayEffect = {
+      count: n,
+      avgEntry,
+      avgExit,
+      avgDelta,
+      alreadyCompliantCount: alreadyOk.length,
+      alreadyCompliantPct:   Math.round(alreadyOk.length / n * 100),
+      respondedCount:        responded.length,
+      respondedPct:          Math.round(responded.length / n * 100),
+      stillOverCount:        stillOver.length,
+      stillOverPct:          Math.round(stillOver.length / n * 100),
+    }
+  }
+
+  return { total, maxSpeed, p85, overCount, overPct, histogram, trend, recent,
+           approaching, receding, hasDirectionData, displayEffect }
+}
+
+function DisplayEffectPanel({ effect, limit }: { effect: DisplayEffect; limit: number }) {
+  const cols = [
+    { label: 'Already Compliant', sub: `Under ${limit} MPH on approach`, count: effect.alreadyCompliantCount, pct: effect.alreadyCompliantPct, color: 'var(--ok-500)', border: 'var(--ok-500)' },
+    { label: 'Slowed to Comply',  sub: 'Display caused speed reduction', count: effect.respondedCount,        pct: effect.respondedPct,        color: 'var(--hivis-500)', border: 'none' },
+    { label: 'Still Over Limit',  sub: 'Did not respond to display',     count: effect.stillOverCount,        pct: effect.stillOverPct,        color: 'var(--over-500)', border: 'none' },
+  ]
+
+  return (
+    <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
+      <div style={{ padding: 'var(--sp-4) var(--sp-5)', borderBottom: 'var(--bd-dark)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <p className="t-label" style={{ color: 'var(--steel-300)' }}>Display Effectiveness</p>
+        <p className="t-label" style={{ color: 'var(--steel-400)' }}>{effect.count} inbound passes · display mode</p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+        {cols.map((col, i) => (
+          <div key={col.label} style={{
+            padding: 'var(--sp-5)',
+            borderLeft: i === 0 ? `3px solid ${col.border !== 'none' ? col.border : 'transparent'}` : 'none',
+            borderRight: i < 2 ? 'var(--bd-hair-dark)' : 'none',
+          }}>
+            <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 6 }}>{col.label}</p>
+            <p style={{ fontFamily: 'var(--font-led)', fontSize: 32, color: col.color, lineHeight: 1 }}>{col.count}</p>
+            <p className="t-label" style={{ color: col.color, marginTop: 4 }}>{col.pct}%</p>
+            <p className="t-label" style={{ color: 'var(--steel-500)', fontSize: 10, marginTop: 8 }}>{col.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {effect.avgEntry != null && (
+        <div style={{ padding: 'var(--sp-3) var(--sp-5)', borderTop: 'var(--bd-dark)', display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+          <span className="t-label" style={{ color: 'var(--steel-400)' }}>Avg approach speed:</span>
+          <span style={{ fontFamily: 'var(--font-led)', fontSize: 18, color: 'var(--steel-200)' }}>{effect.avgEntry} MPH</span>
+          {effect.avgExit != null && (
+            <>
+              <span className="t-label" style={{ color: 'var(--steel-500)' }}>›</span>
+              <span style={{ fontFamily: 'var(--font-led)', fontSize: 18, color: 'var(--steel-200)' }}>{effect.avgExit} MPH on exit</span>
+              {effect.avgDelta != null && effect.avgDelta !== 0 && (
+                <span className="t-label" style={{ color: effect.avgDelta > 0 ? 'var(--ok-500)' : 'var(--over-500)' }}>
+                  ({effect.avgDelta > 0 ? `−${effect.avgDelta}` : `+${Math.abs(effect.avgDelta)}`} MPH avg)
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function DirectionComparison({ approaching, receding, limit }: {
@@ -138,7 +236,6 @@ function DirectionComparison({ approaching, receding, limit }: {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'stretch' }}>
-        {/* Approaching */}
         <div style={{ padding: 'var(--sp-5)', borderLeft: '3px solid var(--hivis-500)' }}>
           <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-4)' }}>Approaching ›</p>
           <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 4, fontSize: 10 }}>Saw the display</p>
@@ -158,7 +255,6 @@ function DirectionComparison({ approaching, receding, limit }: {
           </div>
         </div>
 
-        {/* Diff column */}
         <div style={{ padding: 'var(--sp-5) var(--sp-4)', borderLeft: 'var(--bd-hair-dark)', borderRight: 'var(--bd-hair-dark)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', justifyContent: 'flex-end', paddingTop: 'calc(var(--sp-5) + 12px + var(--sp-4) + 10px)' }}>
           {cols.map(col => {
             const a = approaching[col.key] as number | null
@@ -172,7 +268,6 @@ function DirectionComparison({ approaching, receding, limit }: {
           })}
         </div>
 
-        {/* Receding */}
         <div style={{ padding: 'var(--sp-5)', borderRight: '3px solid var(--steel-400)' }}>
           <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-4)' }}>‹ Receding</p>
           <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 4, fontSize: 10 }}>Did not see the display</p>
@@ -227,7 +322,6 @@ function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 120, display: 'block' }} preserveAspectRatio="none">
-      {/* Limit line */}
       {limitY > PAD.top && limitY < H - PAD.bottom && (
         <>
           <line x1={0} y1={limitY} x2={W} y2={limitY} stroke="rgba(240,70,60,.4)" strokeWidth={1} strokeDasharray="6 4" />
@@ -235,9 +329,7 @@ function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
             style={{ fontFamily: 'var(--font-mono)' }}>{limit} MPH LIMIT</text>
         </>
       )}
-      {/* Speed line */}
       <polyline points={points} fill="none" stroke="rgba(255,134,66,.7)" strokeWidth={1.5} />
-      {/* Dots */}
       {trend.map((t, i) => (
         <circle key={i} cx={x(i)} cy={y(t.speed)} r={3} fill={dotColor(t)} />
       ))}
@@ -275,7 +367,6 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
     return () => clearInterval(poll)
   }, [fetchData])
 
-  // Tick "X seconds ago"
   useEffect(() => {
     const tick = setInterval(() => {
       if (lastUpdated) setSecondsAgo(Math.floor((Date.now() - lastUpdated.getTime()) / 1000))
@@ -302,14 +393,28 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
     { label: 'Over Limit',    value: stats.overPct != null ? `${stats.overPct}%` : '—', sub: `${stats.overCount.toLocaleString()} passes`, color: (stats.overPct ?? 0) > 15 ? 'var(--over-500)' : (stats.overPct ?? 0) > 5 ? 'var(--warn-500)' : 'var(--ok-500)' },
   ]
 
+  // For the recent passes table, show display readings when available
+  const displayReads = stats.recent.filter(r => r.entry_speed_mph != null)
+  const tableReadings = displayReads.length > 0 ? displayReads : stats.recent
+  const isDisplayTable = displayReads.length > 0
+
+  // Compliance rows differ by mode
+  const complianceRows = stats.displayEffect ? [
+    { label: 'Already compliant', count: stats.displayEffect.alreadyCompliantCount, total: stats.displayEffect.count, color: 'var(--ok-500)' },
+    { label: 'Slowed to comply',  count: stats.displayEffect.respondedCount,        total: stats.displayEffect.count, color: 'var(--hivis-500)' },
+    { label: 'Still over limit',  count: stats.displayEffect.stillOverCount,        total: stats.displayEffect.count, color: 'var(--over-500)' },
+  ] : [
+    { label: 'Within limit', count: stats.total - stats.overCount, total: stats.total, color: 'var(--ok-500)' },
+    { label: 'Over limit',   count: stats.overCount,               total: stats.total, color: 'var(--over-500)' },
+  ]
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
 
-      {/* Updated timestamp */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 'var(--sp-3)' }}>
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ok-500)', boxShadow: '0 0 6px rgba(25,195,125,.7)', display: 'inline-block', flexShrink: 0 }} />
         <span className="t-label" style={{ color: 'var(--steel-300)' }}>
-          Updated {secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`} · refreshes every 30s
+          Updated {secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`} · refreshes every 10s
         </span>
       </div>
 
@@ -324,10 +429,12 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
         ))}
       </div>
 
-      {/* Direction comparison — only shown when direction data exists */}
-      {stats.hasDirectionData && (
+      {/* Display effectiveness panel (display mode) — or direction comparison (old data fallback) */}
+      {stats.displayEffect ? (
+        <DisplayEffectPanel effect={stats.displayEffect} limit={speedLimitMph} />
+      ) : stats.hasDirectionData ? (
         <DirectionComparison approaching={stats.approaching} receding={stats.receding} limit={speedLimitMph} />
-      )}
+      ) : null}
 
       {/* Histogram + compliance */}
       <div className="cols-hist" style={{ gap: 'var(--sp-4)' }}>
@@ -362,11 +469,8 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
 
         <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-md)', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
           <p className="t-label" style={{ color: 'var(--steel-300)' }}>Compliance</p>
-          {[
-            { label: 'Within limit', count: stats.total - stats.overCount, color: 'var(--ok-500)' },
-            { label: 'Over limit',   count: stats.overCount,               color: 'var(--over-500)' },
-          ].map(row => {
-            const pct = stats.total ? Math.round((row.count / stats.total) * 100) : 0
+          {complianceRows.map(row => {
+            const pct = row.total ? Math.round((row.count / row.total) * 100) : 0
             return (
               <div key={row.label}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -414,37 +518,61 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
       <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--sp-4) var(--sp-5)', borderBottom: 'var(--bd-dark)' }}>
           <p className="t-label" style={{ color: 'var(--steel-300)' }}>Recent Passes</p>
-          <p className="t-label" style={{ color: 'var(--steel-400)' }}>Latest {stats.recent.length}</p>
+          <p className="t-label" style={{ color: 'var(--steel-400)' }}>
+            {isDisplayTable ? `Latest ${tableReadings.length} · inbound display` : `Latest ${tableReadings.length}`}
+          </p>
         </div>
-        {stats.recent.length === 0 ? (
+        {tableReadings.length === 0 ? (
           <p className="t-label" style={{ color: 'var(--steel-400)', padding: 'var(--sp-8)', textAlign: 'center' }}>No readings recorded yet</p>
         ) : (
           <div style={{ maxHeight: 320, overflowY: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-mono)', fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: 'var(--bd-hair-dark)' }}>
-                  {['Time', 'Speed', 'vs Limit', 'Direction'].map(h => (
+                  {(isDisplayTable
+                    ? ['Time', 'Approach', 'On Exit', 'Change']
+                    : ['Time', 'Speed', 'vs Limit', 'Direction']
+                  ).map(h => (
                     <th key={h} style={{ padding: 'var(--sp-3) var(--sp-4)', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--steel-400)', fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {stats.recent.map((r, i) => {
-                  const over = r.speed_mph > speedLimitMph
-                  const warn = r.speed_mph > speedLimitMph * 0.9
+                {tableReadings.map((r, i) => {
+                  const time = new Date(r.recorded_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+
+                  if (isDisplayTable && r.entry_speed_mph != null) {
+                    const entry = r.entry_speed_mph
+                    const exit  = r.exit_speed_mph ?? null
+                    const delta = exit != null ? entry - exit : null
+                    const entryOver = entry > speedLimitMph
+                    const exitOver  = exit != null && exit > speedLimitMph
+                    const entryColor = entryOver ? 'var(--over-500)' : 'var(--ok-500)'
+                    const exitColor  = exit == null ? 'var(--steel-400)' : exitOver ? 'var(--over-500)' : 'var(--ok-500)'
+                    const deltaColor = delta == null ? 'var(--steel-400)' : delta > 0 ? 'var(--ok-500)' : 'var(--over-500)'
+
+                    return (
+                      <tr key={i} style={{ borderBottom: 'var(--bd-hair-dark)' }}>
+                        <td style={{ padding: 'var(--sp-3) var(--sp-4)', color: 'var(--steel-300)' }}>{time}</td>
+                        <td style={{ padding: 'var(--sp-3) var(--sp-4)', color: entryColor, fontFamily: 'var(--font-led)', fontSize: 16 }}>{entry} MPH</td>
+                        <td style={{ padding: 'var(--sp-3) var(--sp-4)', color: exitColor, fontFamily: 'var(--font-led)', fontSize: 16 }}>{exit != null ? `${exit} MPH` : '—'}</td>
+                        <td style={{ padding: 'var(--sp-3) var(--sp-4)', color: deltaColor }}>
+                          {delta == null ? '—' : delta > 0 ? `−${delta}` : delta === 0 ? '0' : `+${Math.abs(delta)}`}
+                        </td>
+                      </tr>
+                    )
+                  }
+
+                  // Monitor mode / outbound
+                  const over  = r.speed_mph > speedLimitMph
+                  const warn  = r.speed_mph > speedLimitMph * 0.9
                   const color = over ? 'var(--over-500)' : warn ? 'var(--warn-500)' : 'var(--ok-500)'
-                  const diff = r.speed_mph - speedLimitMph
+                  const diff  = r.speed_mph - speedLimitMph
                   return (
                     <tr key={i} style={{ borderBottom: 'var(--bd-hair-dark)' }}>
-                      <td style={{ padding: 'var(--sp-3) var(--sp-4)', color: 'var(--steel-300)' }}>
-                        {new Date(r.recorded_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                      </td>
-                      <td style={{ padding: 'var(--sp-3) var(--sp-4)', color, fontFamily: 'var(--font-led)', fontSize: 16 }}>
-                        {r.speed_mph} MPH
-                      </td>
-                      <td style={{ padding: 'var(--sp-3) var(--sp-4)', color }}>
-                        {diff > 0 ? `+${diff}` : diff === 0 ? '0' : diff}
-                      </td>
+                      <td style={{ padding: 'var(--sp-3) var(--sp-4)', color: 'var(--steel-300)' }}>{time}</td>
+                      <td style={{ padding: 'var(--sp-3) var(--sp-4)', color, fontFamily: 'var(--font-led)', fontSize: 16 }}>{r.speed_mph} MPH</td>
+                      <td style={{ padding: 'var(--sp-3) var(--sp-4)', color }}>{diff > 0 ? `+${diff}` : diff === 0 ? '0' : diff}</td>
                       <td style={{ padding: 'var(--sp-3) var(--sp-4)', color: 'var(--steel-400)' }}>
                         {r.direction === 1 ? 'Inbound' : r.direction === -1 ? 'Outbound' : '—'}
                       </td>
