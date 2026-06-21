@@ -31,6 +31,7 @@ type Telemetry = {
 
 type SiteInfo = {
   id: string; name: string; address: string; speed_limit_mph: number
+  device_type: 'SC-1' | 'SC-2'
   status: string; cpu_temp_c: number | null; uptime_s: number | null
   firmware_version: string | null; last_telemetry_at: string | null
   readings_today: number; violations_today: number
@@ -314,7 +315,17 @@ export default function UnitPage() {
         alignItems: 'center',
       }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <h1 className="t-h2" style={{ color: 'var(--white)', marginBottom: 2 }}>{site.name}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 2 }}>
+            <h1 className="t-h2" style={{ color: 'var(--white)' }}>{site.name}</h1>
+            <span className="t-label" style={{
+              color: site.device_type === 'SC-2' ? 'var(--hivis-500)' : 'var(--steel-400)',
+              background: 'rgba(255,255,255,0.06)',
+              padding: '2px 8px',
+              borderRadius: 'var(--r-xs)',
+              fontSize: 10,
+              letterSpacing: '0.06em',
+            }}>{site.device_type} · {site.device_type === 'SC-2' ? 'Data Sensor' : 'Speed Sign'}</span>
+          </div>
           <p className="t-body-sm" style={{ color: 'var(--steel-300)' }}>{site.address}</p>
         </div>
         <div style={{ display: 'flex', gap: 'var(--sp-6)', flexWrap: 'wrap' }}>
@@ -327,28 +338,30 @@ export default function UnitPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
 
-        {/* Mode control */}
-        <Section title="Mode">
-          <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
-            {(['display', 'monitor', 'auto'] as const).map(m => (
-              <ModeButton key={m} label={m.toUpperCase()} active={draft.mode === m}
-                onClick={() => setDraft(d => d ? { ...d, mode: m } : d)} />
-            ))}
-          </div>
-          {draft.mode === 'auto' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', paddingTop: 'var(--sp-2)', borderTop: 'var(--bd-dark)' }}>
-              <RangeInput label="Monitor for" value={draft.auto_monitor_mins} min={1} max={60} unit="min"
-                onChange={v => setDraft(d => d ? { ...d, auto_monitor_mins: v } : d)} />
-              <RangeInput label="Then display for" value={draft.auto_display_mins} min={1} max={60} unit="min"
-                onChange={v => setDraft(d => d ? { ...d, auto_display_mins: v } : d)} />
+        {/* Mode control — SC-1 only */}
+        {site.device_type !== 'SC-2' && (
+          <Section title="Mode">
+            <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+              {(['display', 'monitor', 'auto'] as const).map(m => (
+                <ModeButton key={m} label={m.toUpperCase()} active={draft.mode === m}
+                  onClick={() => setDraft(d => d ? { ...d, mode: m } : d)} />
+              ))}
             </div>
-          )}
-          <p className="t-body-sm" style={{ color: 'var(--steel-400)' }}>
-            {draft.mode === 'display' && 'Radar active, display showing speeds.'}
-            {draft.mode === 'monitor' && 'Radar active, display blank. Readings still collected.'}
-            {draft.mode === 'auto' && 'Alternates between monitor and display on a timer.'}
-          </p>
-        </Section>
+            {draft.mode === 'auto' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', paddingTop: 'var(--sp-2)', borderTop: 'var(--bd-dark)' }}>
+                <RangeInput label="Monitor for" value={draft.auto_monitor_mins} min={1} max={60} unit="min"
+                  onChange={v => setDraft(d => d ? { ...d, auto_monitor_mins: v } : d)} />
+                <RangeInput label="Then display for" value={draft.auto_display_mins} min={1} max={60} unit="min"
+                  onChange={v => setDraft(d => d ? { ...d, auto_display_mins: v } : d)} />
+              </div>
+            )}
+            <p className="t-body-sm" style={{ color: 'var(--steel-400)' }}>
+              {draft.mode === 'display' && 'Radar active, display showing speeds.'}
+              {draft.mode === 'monitor' && 'Radar active, display blank. Readings still collected.'}
+              {draft.mode === 'auto' && 'Alternates between monitor and display on a timer.'}
+            </p>
+          </Section>
+        )}
 
         {/* Telemetry */}
         <Section title="Telemetry">
@@ -357,7 +370,9 @@ export default function UnitPage() {
             <TelemetryCell label="Memory" value={site.mem_used_pct != null ? `${site.mem_used_pct}%` : '—'} warn={(site.mem_used_pct ?? 0) > 85} />
             <TelemetryCell label="4G Signal" value={site.signal_rssi != null ? `${site.signal_rssi} dBm` : '—'} />
             <TelemetryCell label="Radar" value={site.radar_connected === false ? 'NOT CONNECTED' : site.radar_connected === true ? 'CONNECTED' : '—'} warn={site.radar_connected === false} />
-            <TelemetryCell label="LED Display" value={site.display_connected === false ? 'NOT CONNECTED' : site.display_connected === true ? 'CONNECTED' : '—'} warn={site.display_connected === false} />
+            {site.device_type !== 'SC-2' && (
+              <TelemetryCell label="LED Display" value={site.display_connected === false ? 'NOT CONNECTED' : site.display_connected === true ? 'CONNECTED' : '—'} warn={site.display_connected === false} />
+            )}
             <TelemetryCell
               label="Connection"
               value={site.connection_type === 'wifi' ? 'WiFi' : site.connection_type === '4g' ? '4G' : '—'}
@@ -393,16 +408,18 @@ export default function UnitPage() {
           </div>
         </Section>
 
-        {/* Display texts */}
-        <Section title="Display Messages">
-          <TextInput label="Over limit message" value={draft.text_slow_down}
-            onChange={v => setDraft(d => d ? { ...d, text_slow_down: v } : d)} />
-          <TextInput label="Thank-you message" value={draft.text_thank_you}
-            onChange={v => setDraft(d => d ? { ...d, text_thank_you: v } : d)} />
-          <p className="t-body-sm" style={{ color: 'var(--steel-400)' }}>
-            Max 16 chars, uppercase. Sent to I75 W display firmware.
-          </p>
-        </Section>
+        {/* Display texts — SC-1 only */}
+        {site.device_type !== 'SC-2' && (
+          <Section title="Display Messages">
+            <TextInput label="Over limit message" value={draft.text_slow_down}
+              onChange={v => setDraft(d => d ? { ...d, text_slow_down: v } : d)} />
+            <TextInput label="Thank-you message" value={draft.text_thank_you}
+              onChange={v => setDraft(d => d ? { ...d, text_thank_you: v } : d)} />
+            <p className="t-body-sm" style={{ color: 'var(--steel-400)' }}>
+              Max 16 chars, uppercase. Sent to I75 W display firmware.
+            </p>
+          </Section>
+        )}
 
       </div>
 

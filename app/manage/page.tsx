@@ -8,6 +8,7 @@ type SiteStatus = {
   name: string
   address: string
   speed_limit_mph: number
+  device_type: 'SC-1' | 'SC-2'
   mode: string | null
   current_mode: string | null
   status: 'online' | 'stale' | 'offline'
@@ -89,7 +90,17 @@ export default function ManagePage() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--sp-3)' }}>
                 <div>
-                  <h2 className="t-h3" style={{ color: 'var(--white)', marginBottom: 2 }}>{site.name}</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 2 }}>
+                    <h2 className="t-h3" style={{ color: 'var(--white)' }}>{site.name}</h2>
+                    <span className="t-label" style={{
+                      color: site.device_type === 'SC-2' ? 'var(--hivis-500)' : 'var(--steel-400)',
+                      background: 'rgba(255,255,255,0.06)',
+                      padding: '1px 6px',
+                      borderRadius: 'var(--r-xs)',
+                      fontSize: 10,
+                      letterSpacing: '0.06em',
+                    }}>{site.device_type}</span>
+                  </div>
                   <p className="t-body-sm" style={{ color: 'var(--steel-300)' }}>{site.address}</p>
                 </div>
                 <span className="t-label" style={{

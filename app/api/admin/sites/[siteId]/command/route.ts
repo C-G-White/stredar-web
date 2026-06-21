@@ -8,7 +8,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sit
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { siteId } = await params
-  const [site] = await sql`SELECT id FROM sites WHERE id = ${siteId} LIMIT 1`
+  const [site] = await sql`SELECT id, device_type FROM sites WHERE id = ${siteId} LIMIT 1`
   if (!site) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   let body: unknown
@@ -17,7 +17,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sit
   }
 
   const { command, params: cmdParams } = body as { command: string; params?: Record<string, unknown> }
-  const validCommands = ['SET_MODE', 'SET_THRESHOLDS', 'SET_AUTO_TIMER', 'SET_TEXTS', 'REBOOT', 'SHUTDOWN', 'SET_WIFI']
+  const validCommands = site.device_type === 'SC-2'
+    ? ['SET_THRESHOLDS', 'REBOOT', 'SHUTDOWN', 'SET_WIFI']
+    : ['SET_MODE', 'SET_THRESHOLDS', 'SET_AUTO_TIMER', 'SET_TEXTS', 'REBOOT', 'SHUTDOWN', 'SET_WIFI']
   if (!validCommands.includes(command)) {
     return NextResponse.json({ error: 'Unknown command' }, { status: 400 })
   }
