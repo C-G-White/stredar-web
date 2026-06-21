@@ -206,91 +206,50 @@ function DisplayEffectPanel({ effect, limit }: { effect: DisplayEffect; limit: n
   )
 }
 
-function DirectionComparison({ approaching, receding, limit }: {
+function DirectionBreakdown({ approaching, receding, limit }: {
   approaching: DirectionStats; receding: DirectionStats; limit: number
 }) {
-  const cols: { key: keyof DirectionStats; label: string; unit: string; lowerIsBetter: boolean }[] = [
-    { key: 'max',     label: 'Max Speed',   unit: 'MPH', lowerIsBetter: true },
-    { key: 'p85',     label: '85th Pct.',   unit: 'MPH', lowerIsBetter: true },
-    { key: 'overPct', label: 'Over Limit',  unit: '%',   lowerIsBetter: true },
-    { key: 'count',   label: 'Vehicles',    unit: '',    lowerIsBetter: false },
+  const cols: { key: keyof DirectionStats; label: string; unit: string }[] = [
+    { key: 'count',   label: 'Vehicles',   unit: ''    },
+    { key: 'max',     label: 'Max Speed',  unit: 'MPH' },
+    { key: 'p85',     label: '85th Pct.',  unit: 'MPH' },
+    { key: 'overPct', label: 'Over Limit', unit: '%'   },
   ]
 
-  function diffColor(a: number | null, b: number | null, lowerIsBetter: boolean) {
-    if (a == null || b == null || a === b) return 'var(--steel-400)'
-    const approachingIsBetter = lowerIsBetter ? a < b : a > b
-    return approachingIsBetter ? 'var(--ok-500)' : 'var(--over-500)'
+  function statColor(key: keyof DirectionStats, val: number | null) {
+    if (val == null || key === 'count') return 'var(--steel-200)'
+    if (key === 'max' || key === 'p85') return val > limit ? 'var(--over-500)' : 'var(--ok-500)'
+    if (key === 'overPct') return val > 15 ? 'var(--over-500)' : val > 5 ? 'var(--warn-500)' : 'var(--ok-500)'
+    return 'var(--steel-200)'
   }
 
-  function diffLabel(a: number | null, b: number | null, unit: string) {
-    if (a == null || b == null) return '—'
-    const d = a - b
-    return (d > 0 ? '+' : '') + d + (unit ? ' ' + unit : '')
-  }
+  const side = (stats: DirectionStats, label: string) => (
+    <div style={{ padding: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+      <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-1)' }}>{label}</p>
+      {cols.map(col => {
+        const val = stats[col.key] as number | null
+        return (
+          <div key={col.key}>
+            <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 2 }}>{col.label}</p>
+            <p style={{ fontFamily: 'var(--font-led)', fontSize: 28, color: statColor(col.key, val), lineHeight: 1 }}>
+              {val ?? '—'}{col.unit ? <span style={{ fontSize: 11, marginLeft: 3 }}>{col.unit}</span> : null}
+            </p>
+          </div>
+        )
+      })}
+    </div>
+  )
 
   return (
     <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
-      <div style={{ padding: 'var(--sp-4) var(--sp-5)', borderBottom: 'var(--bd-dark)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <p className="t-label" style={{ color: 'var(--steel-300)' }}>Direction Comparison</p>
-        <p className="t-label" style={{ color: 'var(--steel-400)' }}>Approaching saw the sign · Receding did not</p>
+      <div style={{ padding: 'var(--sp-4) var(--sp-5)', borderBottom: 'var(--bd-dark)' }}>
+        <p className="t-label" style={{ color: 'var(--steel-300)' }}>By Direction</p>
       </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'stretch' }}>
-        <div style={{ padding: 'var(--sp-5)', borderLeft: '3px solid var(--hivis-500)' }}>
-          <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-4)' }}>Approaching ›</p>
-          <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 4, fontSize: 10 }}>Saw the display</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-            {cols.map(col => {
-              const val = approaching[col.key]
-              const other = receding[col.key]
-              return (
-                <div key={col.key}>
-                  <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 2 }}>{col.label}</p>
-                  <p style={{ fontFamily: 'var(--font-led)', fontSize: 28, color: diffColor(val as number | null, other as number | null, col.lowerIsBetter), lineHeight: 1 }}>
-                    {val ?? '—'}{col.unit ? <span style={{ fontSize: 11, marginLeft: 3 }}>{col.unit}</span> : null}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+        <div style={{ borderRight: 'var(--bd-hair-dark)' }}>
+          {side(approaching, 'Inbound ›')}
         </div>
-
-        <div style={{ padding: 'var(--sp-5) var(--sp-4)', borderLeft: 'var(--bd-hair-dark)', borderRight: 'var(--bd-hair-dark)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', justifyContent: 'flex-end', paddingTop: 'calc(var(--sp-5) + 12px + var(--sp-4) + 10px)' }}>
-          {cols.map(col => {
-            const a = approaching[col.key] as number | null
-            const b = receding[col.key] as number | null
-            const color = diffColor(a, b, col.lowerIsBetter)
-            return (
-              <div key={col.key} style={{ textAlign: 'center', height: 46, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span className="t-label" style={{ color, fontSize: 11 }}>{diffLabel(a, b, col.unit)}</span>
-              </div>
-            )
-          })}
-        </div>
-
-        <div style={{ padding: 'var(--sp-5)', borderRight: '3px solid var(--steel-400)' }}>
-          <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-4)' }}>‹ Receding</p>
-          <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 4, fontSize: 10 }}>Did not see the display</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-            {cols.map(col => {
-              const val = receding[col.key]
-              return (
-                <div key={col.key}>
-                  <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 2 }}>{col.label}</p>
-                  <p style={{ fontFamily: 'var(--font-led)', fontSize: 28, color: 'var(--steel-200)', lineHeight: 1 }}>
-                    {val ?? '—'}{col.unit ? <span style={{ fontSize: 11, marginLeft: 3 }}>{col.unit}</span> : null}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ padding: 'var(--sp-3) var(--sp-5)', borderTop: 'var(--bd-dark)' }}>
-        <p className="t-label" style={{ color: 'var(--steel-400)', fontSize: 10 }}>
-          Diff column shows approaching minus receding. Green = approaching drivers are slower / more compliant.
-        </p>
+        {side(receding, '‹ Outbound')}
       </div>
     </div>
   )
@@ -433,7 +392,7 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
       {stats.displayEffect ? (
         <DisplayEffectPanel effect={stats.displayEffect} limit={speedLimitMph} />
       ) : stats.hasDirectionData ? (
-        <DirectionComparison approaching={stats.approaching} receding={stats.receding} limit={speedLimitMph} />
+        <DirectionBreakdown approaching={stats.approaching} receding={stats.receding} limit={speedLimitMph} />
       ) : null}
 
       {/* Histogram + compliance */}
