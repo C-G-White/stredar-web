@@ -7,6 +7,7 @@ export type Site = {
   lng: number
   speed_limit_mph: number
   active: boolean
+  device_type: 'SC-1' | 'SC-2'
   created_at: string
 }
 

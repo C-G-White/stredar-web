@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS sites (
   speed_limit_mph INTEGER         NOT NULL,
   active          BOOLEAN         NOT NULL DEFAULT true,
   api_key         TEXT            UNIQUE,  -- per-device secret for ingest auth
+  device_type     TEXT            NOT NULL DEFAULT 'SC-1', -- 'SC-1' | 'SC-2'
   created_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
 

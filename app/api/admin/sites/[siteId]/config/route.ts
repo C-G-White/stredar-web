@@ -20,7 +20,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { siteId } = await params
-  const [site] = await sql`SELECT id FROM sites WHERE id = ${siteId} LIMIT 1`
+  const [site] = await sql`SELECT id, device_type FROM sites WHERE id = ${siteId} LIMIT 1`
   if (!site) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   let body: unknown
@@ -63,17 +63,25 @@ export async function PUT(req: NextRequest, { params }: Params) {
   `
 
   // Queue commands so the Pi picks up the changes
-  await _queueConfigCommands(siteId, updated)
+  await _queueConfigCommands(siteId, updated, site.device_type as string)
 
   return NextResponse.json(updated)
 }
 
-async function _queueConfigCommands(siteId: string, cfg: Record<string, unknown>) {
-  await sql`
-    INSERT INTO commands (site_id, command, params) VALUES
-      (${siteId}, 'SET_MODE',       ${JSON.stringify({ mode: cfg.mode })}),
-      (${siteId}, 'SET_THRESHOLDS', ${JSON.stringify({ under_speed: cfg.under_speed_mph, speed_limit: cfg.speed_limit_mph })}),
-      (${siteId}, 'SET_AUTO_TIMER', ${JSON.stringify({ monitor_minutes: cfg.auto_monitor_mins, display_minutes: cfg.auto_display_mins })}),
-      (${siteId}, 'SET_TEXTS',      ${JSON.stringify({ slow_down: cfg.text_slow_down, thank_you: cfg.text_thank_you })})
-  `
+async function _queueConfigCommands(siteId: string, cfg: Record<string, unknown>, deviceType: string) {
+  if (deviceType === 'SC-2') {
+    // SC-2 has no display — only thresholds are relevant
+    await sql`
+      INSERT INTO commands (site_id, command, params) VALUES
+        (${siteId}, 'SET_THRESHOLDS', ${JSON.stringify({ under_speed: cfg.under_speed_mph, speed_limit: cfg.speed_limit_mph })})
+    `
+  } else {
+    await sql`
+      INSERT INTO commands (site_id, command, params) VALUES
+        (${siteId}, 'SET_MODE',       ${JSON.stringify({ mode: cfg.mode })}),
+        (${siteId}, 'SET_THRESHOLDS', ${JSON.stringify({ under_speed: cfg.under_speed_mph, speed_limit: cfg.speed_limit_mph })}),
+        (${siteId}, 'SET_AUTO_TIMER', ${JSON.stringify({ monitor_minutes: cfg.auto_monitor_mins, display_minutes: cfg.auto_display_mins })}),
+        (${siteId}, 'SET_TEXTS',      ${JSON.stringify({ slow_down: cfg.text_slow_down, thank_you: cfg.text_thank_you })})
+    `
+  }
 }
