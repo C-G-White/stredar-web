@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       LIMIT 1000
     `
     return NextResponse.json(rows, {
-      headers: { 'Cache-Control': 's-maxage=10, stale-while-revalidate=20' },
+      headers: { 'Cache-Control': 'no-store' },
     })
   }
 
