@@ -265,14 +265,14 @@ function DirectionBreakdown({ approaching, receding, limit }: {
 
 function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
   if (trend.length < 2) return (
-    <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <p className="t-label" style={{ color: 'var(--steel-400)' }}>Not enough data yet</p>
     </div>
   )
 
   const W = 800
-  const H = 100
-  const PAD = { top: 12, bottom: 12, left: 4, right: 4 }
+  const H = 220
+  const PAD = { top: 16, bottom: 16, left: 4, right: 4 }
 
   const speeds = trend.map(t => t.speed)
   const minS = Math.max(0, Math.min(...speeds) - 5)
@@ -288,7 +288,7 @@ function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
     t.isOver ? 'var(--over-500)' : t.isWarn ? 'var(--warn-500)' : 'var(--ok-500)'
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 120, display: 'block' }} preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 260, display: 'block' }} preserveAspectRatio="none">
       {limitY > PAD.top && limitY < H - PAD.bottom && (
         <>
           <line x1={0} y1={limitY} x2={W} y2={limitY} stroke="rgba(240,70,60,.4)" strokeWidth={1} strokeDasharray="6 4" />
