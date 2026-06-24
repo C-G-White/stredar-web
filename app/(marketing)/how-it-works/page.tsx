@@ -204,67 +204,50 @@ export default function HowItWorksPage() {
           </h2>
           <p className="t-body" style={{ color: 'var(--steel-200)', marginBottom: 'var(--sp-10)' }}>
             A compact weatherproof enclosure mounts directly to any standard street furniture pole.
-            The solar panel sits above it. The battery is sealed inside the box — nothing on the
-            ground, no tripod, no visible cabling.
+            The power supply is separate and out of sight. The unit itself contains only the radar
+            module, 4G modem, and GPS receiver — no tripod, no visible cabling.
           </p>
           <div className="cols-2" style={{ gap: 'var(--sp-16)', alignItems: 'center' }}>
             {/* SVG illustration */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <svg viewBox="0 0 240 520" width="240" height="520" aria-label="SC-2 pole-mounted unit diagram">
+              <svg viewBox="0 0 240 420" width="240" height="420" aria-label="SC-2 pole-mounted unit diagram">
                 {/* Pole */}
-                <rect x="113" y="0" width="14" height="520" fill="#3a4450" rx="3"/>
-
-                {/* Solar panel — angled bracket arm */}
-                <line x1="120" y1="60" x2="155" y2="40" stroke="#4a5a6a" strokeWidth="4"/>
-                {/* Solar panel body */}
-                <rect x="155" y="22" width="70" height="36" fill="#1a2535" rx="4" stroke="#2a3d52" strokeWidth="1.5"/>
-                {/* Solar cells grid */}
-                {[0,1,2].map(col => [0,1].map(row => (
-                  <rect key={`${col}-${row}`} x={159 + col * 22} y={26 + row * 14} width={19} height={11} fill="#1e3a5f" rx="1" stroke="#0d1f35" strokeWidth="0.5"/>
-                )))}
+                <rect x="113" y="0" width="14" height="420" fill="#3a4450" rx="3"/>
 
                 {/* Main enclosure */}
-                <rect x="86" y="120" width="68" height="100" fill="#2a3340" rx="6" stroke="#3d4f62" strokeWidth="1.5"/>
-                {/* Accent stripe top */}
-                <rect x="86" y="120" width="3" height="100" fill="var(--hivis-500)" rx="1"/>
-                {/* Enclosure detail — ventilation slots */}
-                <rect x="96" y="134" width="48" height="3" fill="#1a2430" rx="1"/>
-                <rect x="96" y="141" width="48" height="3" fill="#1a2430" rx="1"/>
-                {/* Radar module aperture */}
-                <rect x="96" y="154" width="48" height="36" fill="#1a2430" rx="3" stroke="#3d4f62" strokeWidth="1"/>
-                <circle cx="120" cy="172" r="12" fill="#0d1520" stroke="#2a3d52" strokeWidth="1"/>
-                <circle cx="120" cy="172" r="5" fill="#162030" stroke="#3d5570" strokeWidth="0.75"/>
-                {/* Label */}
-                <text x="120" y="206" textAnchor="middle" fontFamily="monospace" fontSize="8" fill="#4a6070" letterSpacing="2">SC-2</text>
-                {/* Bottom of enclosure detail */}
-                <rect x="96" y="212" width="48" height="3" fill="#1a2430" rx="1"/>
+                <rect x="86" y="60" width="68" height="100" fill="#2a3340" rx="6" stroke="#3d4f62" strokeWidth="1.5"/>
+                {/* Hi-vis accent stripe */}
+                <rect x="86" y="60" width="3" height="100" fill="var(--hivis-500)" rx="1"/>
+                {/* Top ventilation slots */}
+                <rect x="96" y="74" width="48" height="3" fill="#1a2430" rx="1"/>
+                <rect x="96" y="81" width="48" height="3" fill="#1a2430" rx="1"/>
+                {/* Plain front face — no camera aperture */}
+                <rect x="96" y="94" width="48" height="36" fill="#1a2430" rx="2" stroke="#283040" strokeWidth="1"/>
+                {/* Bottom ventilation slot */}
+                <rect x="96" y="148" width="48" height="3" fill="#1a2430" rx="1"/>
+                {/* SC-2 label */}
+                <text x="120" y="158" textAnchor="middle" fontFamily="monospace" fontSize="8" fill="#4a6070" letterSpacing="2">SC-2</text>
 
-                {/* Clamp to pole */}
-                <rect x="108" y="128" width="24" height="12" fill="#3d4f62" rx="2"/>
-                <rect x="108" y="196" width="24" height="12" fill="#3d4f62" rx="2"/>
+                {/* Clamps to pole */}
+                <rect x="108" y="68" width="24" height="10" fill="#3d4f62" rx="2"/>
+                <rect x="108" y="138" width="24" height="10" fill="#3d4f62" rx="2"/>
 
                 {/* Small 4G antenna nub */}
-                <rect x="148" y="130" width="5" height="18" fill="#3d4f62" rx="2"/>
-                <circle cx="150.5" cy="128" r="3" fill="#4a5a6a"/>
+                <rect x="148" y="70" width="5" height="16" fill="#3d4f62" rx="2"/>
+                <circle cx="150.5" cy="68" r="3" fill="#4a5a6a"/>
 
                 {/* Ground indicator */}
-                <line x1="60" y1="510" x2="180" y2="510" stroke="#2a3440" strokeWidth="2"/>
-
-                {/* Labels */}
-                {/* Solar panel label */}
-                <line x1="228" y1="40" x2="215" y2="40" stroke="#4a5a6a" strokeWidth="1" strokeDasharray="3,2"/>
-                <text x="230" y="44" fontFamily="monospace" fontSize="9" fill="#6a8090">Solar</text>
+                <line x1="60" y1="410" x2="180" y2="410" stroke="#2a3440" strokeWidth="2"/>
 
                 {/* Enclosure label */}
-                <line x1="158" y1="170" x2="172" y2="170" stroke="#4a5a6a" strokeWidth="1" strokeDasharray="3,2"/>
-                <text x="174" y="162" fontFamily="monospace" fontSize="9" fill="#6a8090">Radar +</text>
-                <text x="174" y="174" fontFamily="monospace" fontSize="9" fill="#6a8090">Battery</text>
-                <text x="174" y="186" fontFamily="monospace" fontSize="9" fill="#6a8090">4G · GPS</text>
+                <line x1="158" y1="112" x2="172" y2="112" stroke="#4a5a6a" strokeWidth="1" strokeDasharray="3,2"/>
+                <text x="174" y="107" fontFamily="monospace" fontSize="9" fill="#6a8090">Radar</text>
+                <text x="174" y="119" fontFamily="monospace" fontSize="9" fill="#6a8090">4G · GPS</text>
 
                 {/* Pole label */}
-                <line x1="64" y1="400" x2="112" y2="400" stroke="#4a5a6a" strokeWidth="1" strokeDasharray="3,2"/>
-                <text x="20" y="396" fontFamily="monospace" fontSize="9" fill="#6a8090">Existing</text>
-                <text x="28" y="408" fontFamily="monospace" fontSize="9" fill="#6a8090">pole</text>
+                <line x1="64" y1="300" x2="112" y2="300" stroke="#4a5a6a" strokeWidth="1" strokeDasharray="3,2"/>
+                <text x="20" y="296" fontFamily="monospace" fontSize="9" fill="#6a8090">Existing</text>
+                <text x="28" y="308" fontFamily="monospace" fontSize="9" fill="#6a8090">pole</text>
               </svg>
             </div>
 
@@ -272,7 +255,7 @@ export default function HowItWorksPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
               {[
                 { heading: 'Pole-mounted',      body: 'Attaches to any standard street furniture — lamp post, sign post, or dedicated stake. No groundworks.' },
-                { heading: 'Self-contained',    body: 'Solar panel, LiFePO4 battery, radar, 4G modem, and GPS receiver all within a single weatherproof box. Nothing on the ground.' },
+                { heading: 'Compact',           body: 'Radar module, 4G modem, and GPS receiver in a single weatherproof enclosure. Power is supplied separately and out of sight — the unit itself is small and unobtrusive.' },
                 { heading: 'Discreet by design',body: 'No warning signs, no illuminated panels. The unit is intentionally unobtrusive so collected data reflects normal behaviour.' },
                 { heading: 'IP66 weatherproof', body: 'Sealed to IP66 — rain, dust, and road spray proof. No maintenance visits required between deployments.' },
               ].map(item => (
