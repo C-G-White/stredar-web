@@ -116,7 +116,7 @@ function compute(readings: Reading[], limit: number): Stats {
 
   const trend = [...readings]
     .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
-    .slice(-300)
+    .slice(-100)
     .map(r => ({
       speed: r.speed_mph,
       recorded_at: r.recorded_at,
