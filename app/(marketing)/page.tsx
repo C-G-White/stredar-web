@@ -17,8 +17,8 @@ const steps = [
   },
   {
     number: '02',
-    heading: 'Drivers see their speed',
-    body: 'The LED display shows the vehicle speed as it passes — immediate, visible feedback. No cameras. No prosecution.',
+    heading: 'Every pass is recorded',
+    body: 'Speed and timestamp are logged for every vehicle — anonymously. No cameras, no registration plates. Just verified speed data building a clear picture of what is actually happening on your road.',
   },
   {
     number: '03',
@@ -61,9 +61,9 @@ export default function HomePage() {
             Your Road.<br />Your Data.<br />Your Community.
           </h1>
           <p className="t-body-lg" style={{ color: 'var(--ink-2)', maxWidth: 560, marginBottom: 'var(--sp-10)' }}>
-            Stredar is a low-cost, community-owned Speed Indicator Device. It measures vehicle speeds,
-            gives drivers real-time feedback, and feeds anonymised data into a national picture of road
-            safety across the UK.
+            Stredar is a low-cost, community-owned speed monitoring device. It measures vehicle speeds
+            anonymously and feeds the data into a national picture of road safety across the UK —
+            giving communities the evidence to back what residents already know.
           </p>
           <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
             <Link
