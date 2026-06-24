@@ -6,13 +6,24 @@ export async function GET(req: NextRequest) {
   const siteId = searchParams.get('site_id')
 
   if (siteId) {
-    const rows = await sql`
-      SELECT speed_mph, direction, entry_speed_mph, exit_speed_mph, recorded_at
-      FROM readings
-      WHERE site_id = ${siteId}
-      ORDER BY recorded_at DESC
-      LIMIT 1000
-    `
+    const limitParam = searchParams.get('limit')
+    const limit = limitParam ? parseInt(limitParam, 10) : null
+
+    const rows = limit
+      ? await sql`
+          SELECT speed_mph, direction, entry_speed_mph, exit_speed_mph, recorded_at
+          FROM readings
+          WHERE site_id = ${siteId}
+          ORDER BY recorded_at DESC
+          LIMIT ${limit}
+        `
+      : await sql`
+          SELECT speed_mph, direction, entry_speed_mph, exit_speed_mph, recorded_at
+          FROM readings
+          WHERE site_id = ${siteId}
+            AND recorded_at > now() - interval '24 hours'
+          ORDER BY recorded_at DESC
+        `
     return NextResponse.json(rows, {
       headers: { 'Cache-Control': 'no-store' },
     })

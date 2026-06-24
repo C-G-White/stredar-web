@@ -62,6 +62,14 @@ type TrendPoint = {
 
 const POLL_INTERVAL = 10_000
 
+const LIMIT_OPTIONS = [
+  { label: 'Today', value: null },
+  { label: '500',   value: 500 },
+  { label: '1 000', value: 1000 },
+  { label: '2 000', value: 2000 },
+  { label: '5 000', value: 5000 },
+]
+
 function avg(ns: number[]): number | null {
   return ns.length ? Math.round(ns.reduce((a, b) => a + b, 0) / ns.length) : null
 }
@@ -302,11 +310,15 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
   const [error, setError] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [secondsAgo, setSecondsAgo] = useState(0)
+  const [selectedLimit, setSelectedLimit] = useState<number | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch(`/api/data?site_id=${siteId}`, { cache: 'no-store' })
+      const url = selectedLimit
+        ? `/api/data?site_id=${siteId}&limit=${selectedLimit}`
+        : `/api/data?site_id=${siteId}`
+      const res = await fetch(url, { cache: 'no-store' })
       if (!res.ok) throw new Error('fetch failed')
       const readings: Reading[] = await res.json()
       setStats(compute(readings, speedLimitMph))
@@ -321,10 +333,11 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
   }, [siteId, speedLimitMph])
 
   useEffect(() => {
+    setLoading(true)
     fetchData()
     const poll = setInterval(fetchData, POLL_INTERVAL)
     return () => clearInterval(poll)
-  }, [fetchData])
+  }, [fetchData, selectedLimit])
 
   useEffect(() => {
     const tick = setInterval(() => {
@@ -370,11 +383,37 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 'var(--sp-3)' }}>
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ok-500)', boxShadow: '0 0 6px rgba(25,195,125,.7)', display: 'inline-block', flexShrink: 0 }} />
-        <span className="t-label" style={{ color: 'var(--steel-300)' }}>
-          Updated {secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`} · refreshes every 10s
-        </span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {LIMIT_OPTIONS.map(opt => {
+            const active = opt.value === selectedLimit
+            return (
+              <button
+                key={opt.label}
+                onClick={() => setSelectedLimit(opt.value)}
+                style={{
+                  padding: '4px 10px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  letterSpacing: '0.06em',
+                  background: active ? 'var(--hivis-500)' : 'var(--asphalt-600)',
+                  color: active ? 'var(--white)' : 'var(--steel-300)',
+                  border: active ? 'var(--bd-accent)' : 'var(--bd-dark)',
+                  borderRadius: 'var(--r-xs)',
+                  cursor: 'pointer',
+                }}
+              >
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ok-500)', boxShadow: '0 0 6px rgba(25,195,125,.7)', display: 'inline-block', flexShrink: 0 }} />
+          <span className="t-label" style={{ color: 'var(--steel-300)' }}>
+            Updated {secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`} · refreshes every 10s
+          </span>
+        </div>
       </div>
 
       {/* Stat cards */}
