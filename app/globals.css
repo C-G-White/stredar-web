@@ -149,6 +149,22 @@ body { overflow-x: hidden; }
   .nav-mobile-btn { display: flex; align-items: center; justify-content: center; }
 }
 
+/* ── Light theme (dashboard) ──────────────────────────── */
+[data-theme="light"] {
+  --asphalt-900: #E8EAED;
+  --asphalt-800: #F0F2F4;
+  --asphalt-700: #FFFFFF;
+  --asphalt-600: #EAECEE;
+  --steel-500:   #DCDFE3;
+  --steel-400:   #C2C7CD;
+  --steel-300:   #6A717A;
+  --steel-200:   #41474E;
+  --steel-100:   #14171A;
+  --white:       #0E1013;
+  --bd-dark:      1px solid #DCDFE3;
+  --bd-hair-dark: 1px solid #C2C7CD;
+}
+
 @media (max-width: 480px) {
   /* Form rows collapse to single column on phones */
   .cols-form-2 { grid-template-columns: 1fr; }

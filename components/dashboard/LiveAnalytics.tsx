@@ -330,14 +330,14 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
     } finally {
       setLoading(false)
     }
-  }, [siteId, speedLimitMph])
+  }, [siteId, speedLimitMph, selectedLimit])
 
   useEffect(() => {
     setLoading(true)
     fetchData()
     const poll = setInterval(fetchData, POLL_INTERVAL)
     return () => clearInterval(poll)
-  }, [fetchData, selectedLimit])
+  }, [fetchData])
 
   useEffect(() => {
     const tick = setInterval(() => {
