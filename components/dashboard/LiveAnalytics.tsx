@@ -264,6 +264,8 @@ function DirectionBreakdown({ approaching, receding, limit }: {
 }
 
 function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
+  const [hovered, setHovered] = useState<number | null>(null)
+
   if (trend.length < 2) return (
     <div style={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <p className="t-label" style={{ color: 'var(--steel-400)' }}>Not enough data yet</p>
@@ -272,7 +274,7 @@ function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
 
   const W = 800
   const H = 220
-  const PAD = { top: 16, bottom: 16, left: 4, right: 4 }
+  const PAD = { top: 32, bottom: 16, left: 4, right: 4 }
 
   const speeds = trend.map(t => t.speed)
   const minS = Math.max(0, Math.min(...speeds) - 5)
@@ -287,6 +289,9 @@ function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
   const dotColor = (t: TrendPoint) =>
     t.isOver ? 'var(--over-500)' : t.isWarn ? 'var(--warn-500)' : 'var(--ok-500)'
 
+  const CALLOUT_W = 72
+  const CALLOUT_H = 26
+
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 260, display: 'block' }} preserveAspectRatio="none">
       {limitY > PAD.top && limitY < H - PAD.bottom && (
@@ -297,9 +302,35 @@ function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
         </>
       )}
       <polyline points={points} fill="none" stroke="rgba(255,134,66,.7)" strokeWidth={1.5} />
-      {trend.map((t, i) => (
-        <circle key={i} cx={x(i)} cy={y(t.speed)} r={3} fill={dotColor(t)} />
-      ))}
+      {trend.map((t, i) => {
+        const cx = x(i)
+        const cy = y(t.speed)
+        const isHovered = hovered === i
+        const color = dotColor(t)
+        const calloutX = Math.min(Math.max(cx - CALLOUT_W / 2, PAD.left), W - PAD.right - CALLOUT_W)
+        const calloutY = cy - CALLOUT_H - 8
+        return (
+          <g key={i}>
+            <circle cx={cx} cy={cy} r={10} fill="transparent"
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              style={{ cursor: 'crosshair' }}
+            />
+            <circle cx={cx} cy={cy} r={isHovered ? 5 : 3} fill={color} />
+            {isHovered && (
+              <g>
+                <line x1={cx} y1={cy - 5} x2={cx} y2={calloutY + CALLOUT_H} stroke={color} strokeWidth={1} opacity={0.6} />
+                <rect x={calloutX} y={calloutY} width={CALLOUT_W} height={CALLOUT_H} rx={3}
+                  fill="var(--asphalt-900)" stroke={color} strokeWidth={1} />
+                <text x={calloutX + CALLOUT_W / 2} y={calloutY + 17} textAnchor="middle"
+                  fill={color} fontSize={13} fontWeight={700}
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                >{t.speed} MPH</text>
+              </g>
+            )}
+          </g>
+        )
+      })}
     </svg>
   )
 }

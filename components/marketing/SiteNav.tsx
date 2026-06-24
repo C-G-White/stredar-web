@@ -9,7 +9,6 @@ const links = [
   { href: '/join', label: 'Join the Scheme' },
   { href: '/councils', label: 'For Councils' },
   { href: '/data', label: 'Live Data' },
-  { href: '/simulator.html', label: 'Simulator', external: true },
 ]
 
 function HamburgerIcon() {
@@ -73,39 +72,20 @@ export default function SiteNav() {
         {/* Desktop nav */}
         <nav className="nav-desktop">
           {links.map(link =>
-            link.external ? (
-              <a
-                key={link.href}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: 'var(--hivis-500)',
-                  textDecoration: 'none',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                key={link.href}
-                href={link.href}
-                style={{
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: isActive(link.href) ? 'var(--hivis-500)' : 'var(--ink-2)',
-                  textDecoration: 'none',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {link.label}
-              </Link>
-            )
+            <Link
+              key={link.href}
+              href={link.href}
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 14,
+                fontWeight: 500,
+                color: isActive(link.href) ? 'var(--hivis-500)' : 'var(--ink-2)',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {link.label}
+            </Link>
           )}
         </nav>
 
@@ -139,30 +119,8 @@ export default function SiteNav() {
         }}
       >
         {links.map((link, i) => {
-          const active = !link.external && isActive(link.href)
-          const isLast = i === links.length - 1
-          return link.external ? (
-            <a
-              key={link.href}
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'block',
-                padding: 'var(--sp-5) var(--sp-6)',
-                fontFamily: 'var(--font-display)',
-                fontWeight: 700,
-                fontSize: 16,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                color: 'var(--hivis-500)',
-                textDecoration: 'none',
-                borderTop: '1px solid var(--steel-500)',
-              }}
-            >
-              {link.label} ↗
-            </a>
-          ) : (
+          const active = isActive(link.href)
+          return (
             <Link
               key={link.href}
               href={link.href}
@@ -176,7 +134,7 @@ export default function SiteNav() {
                 letterSpacing: '0.04em',
                 color: active ? 'var(--hivis-500)' : 'var(--steel-100)',
                 textDecoration: 'none',
-                borderTop: i === 0 ? '1px solid var(--steel-500)' : '1px solid var(--steel-500)',
+                borderTop: '1px solid var(--steel-500)',
                 borderLeft: active ? 'var(--bd-accent)' : '3px solid transparent',
                 paddingLeft: 'var(--sp-5)',
               }}
