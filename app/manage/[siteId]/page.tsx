@@ -32,6 +32,7 @@ type Telemetry = {
 type SiteInfo = {
   id: string; name: string; address: string; speed_limit_mph: number
   device_type: 'SC-1' | 'SC-2'
+  active: boolean
   status: string; cpu_temp_c: number | null; uptime_s: number | null
   firmware_version: string | null; last_telemetry_at: string | null
   readings_today: number; violations_today: number
@@ -181,6 +182,7 @@ export default function UnitPage() {
   const [wifiPassVisible, setWifiPassVisible] = useState(false)
   const [showWifiConfirm, setShowWifiConfirm] = useState(false)
   const [wifiManual, setWifiManual]     = useState(false)
+  const [togglingVisible, setTogglingVisible] = useState(false)
 
   const load = useCallback(async () => {
     const [sitesRes, cfgRes] = await Promise.all([
@@ -277,6 +279,19 @@ export default function UnitPage() {
     setWifiManual(false)
     setSaveMsg(`WiFi command queued — unit will connect to "${wifiSsid}" when in range`)
     setTimeout(() => setSaveMsg(''), 6000)
+  }
+
+  async function toggleVisible() {
+    if (!site) return
+    setTogglingVisible(true)
+    const next = !site.active
+    const r = await fetch(`/api/admin/sites/${siteId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active: next }),
+    })
+    if (r.ok) setSite(s => s ? { ...s, active: next } : s)
+    setTogglingVisible(false)
   }
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(config)
@@ -454,6 +469,39 @@ export default function UnitPage() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Public visibility */}
+      <div style={{ marginTop: 'var(--sp-4)', background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderLeft: site.active ? '3px solid var(--ok-500)' : '3px solid var(--steel-500)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-6)', flexWrap: 'wrap' }}>
+        <div>
+          <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 4 }}>Public Visibility</p>
+          <p className="t-body-sm" style={{ color: 'var(--steel-400)' }}>
+            {site.active
+              ? 'Site is visible on the /data pages. Toggle off to hide it from the public dashboard.'
+              : 'Site is hidden from the /data pages. Toggle on to make it publicly visible.'}
+          </p>
+        </div>
+        <button
+          onClick={toggleVisible}
+          disabled={togglingVisible}
+          style={{
+            flexShrink: 0,
+            padding: '10px 20px',
+            background: site.active ? 'var(--ok-500)' : 'var(--asphalt-600)',
+            border: site.active ? 'none' : 'var(--bd-dark)',
+            borderRadius: 'var(--r-sm)',
+            color: site.active ? 'var(--white)' : 'var(--steel-300)',
+            fontFamily: 'var(--font-display)',
+            fontWeight: 700,
+            fontSize: 14,
+            letterSpacing: '0.04em',
+            cursor: togglingVisible ? 'wait' : 'pointer',
+            opacity: togglingVisible ? 0.6 : 1,
+            transition: `background var(--dur) var(--ease-out)`,
+          }}
+        >
+          {togglingVisible ? '…' : site.active ? 'VISIBLE' : 'HIDDEN'}
+        </button>
       </div>
 
       {/* WiFi configuration */}
