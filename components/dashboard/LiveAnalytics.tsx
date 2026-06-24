@@ -286,6 +286,10 @@ function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
   const limitY = y(limit)
   const points = trend.map((t, i) => `${x(i)},${y(t.speed)}`).join(' ')
 
+  const sortedSpeeds = [...speeds].sort((a, b) => a - b)
+  const p85 = sortedSpeeds[Math.min(sortedSpeeds.length - 1, Math.floor(sortedSpeeds.length * 0.85))]
+  const p85Y = y(p85)
+
   const dotColor = (t: TrendPoint) =>
     t.isOver ? 'var(--over-500)' : t.isWarn ? 'var(--warn-500)' : 'var(--ok-500)'
 
@@ -299,6 +303,13 @@ function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
           <line x1={0} y1={limitY} x2={W} y2={limitY} stroke="rgba(240,70,60,.4)" strokeWidth={1} strokeDasharray="6 4" />
           <text x={W - PAD.right} y={limitY - 3} fill="rgba(240,70,60,.6)" fontSize={10} textAnchor="end"
             style={{ fontFamily: 'var(--font-mono)' }}>{limit} MPH LIMIT</text>
+        </>
+      )}
+      {p85Y > PAD.top && p85Y < H - PAD.bottom && (
+        <>
+          <line x1={0} y1={p85Y} x2={W} y2={p85Y} stroke="rgba(255,200,50,.45)" strokeWidth={1} strokeDasharray="4 4" />
+          <text x={PAD.left} y={p85Y - 3} fill="rgba(255,200,50,.7)" fontSize={10} textAnchor="start"
+            style={{ fontFamily: 'var(--font-mono)' }}>85TH PCT · {p85} MPH</text>
         </>
       )}
       <polyline points={points} fill="none" stroke="rgba(255,134,66,.7)" strokeWidth={1.5} />
