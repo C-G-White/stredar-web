@@ -12,6 +12,7 @@ type Reading = {
 
 type DirectionStats = {
   count: number
+  mean: number | null
   max: number | null
   p85: number | null
   overPct: number | null
@@ -98,11 +99,12 @@ function avg(ns: number[]): number | null {
 }
 
 function dirStats(subset: Reading[], limit: number): DirectionStats {
-  if (!subset.length) return { count: 0, max: null, p85: null, overPct: null }
+  if (!subset.length) return { count: 0, mean: null, max: null, p85: null, overPct: null }
   const speeds = subset.map(r => r.speed_mph)
   const sorted = [...speeds].sort((a, b) => a - b)
   return {
     count:   subset.length,
+    mean:    Math.round(speeds.reduce((a, b) => a + b, 0) / speeds.length),
     max:     Math.max(...speeds),
     p85:     sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.85))],
     overPct: Math.round((speeds.filter(s => s > limit).length / speeds.length) * 100),
@@ -113,8 +115,8 @@ function compute(readings: Reading[], limit: number): Stats {
   const empty: Stats = {
     total: 0, maxSpeed: null, p85: null, overCount: 0, overPct: null,
     histogram: [], trend: [], recent: [],
-    approaching: { count: 0, max: null, p85: null, overPct: null },
-    receding:    { count: 0, max: null, p85: null, overPct: null },
+    approaching: { count: 0, mean: null, max: null, p85: null, overPct: null },
+    receding:    { count: 0, mean: null, max: null, p85: null, overPct: null },
     hasDirectionData: false, displayEffect: null,
   }
   if (!readings.length) return empty
@@ -242,6 +244,7 @@ function DirectionBreakdown({ approaching, receding, limit }: {
 }) {
   const cols: { key: keyof DirectionStats; label: string; unit: string }[] = [
     { key: 'count',   label: 'Vehicles',   unit: ''    },
+    { key: 'mean',    label: 'Mean Speed', unit: 'MPH' },
     { key: 'max',     label: 'Max Speed',  unit: 'MPH' },
     { key: 'p85',     label: '85th Pct.',  unit: 'MPH' },
     { key: 'overPct', label: 'Over Limit', unit: '%'   },
@@ -249,7 +252,7 @@ function DirectionBreakdown({ approaching, receding, limit }: {
 
   function statColor(key: keyof DirectionStats, val: number | null) {
     if (val == null || key === 'count') return 'var(--steel-200)'
-    if (key === 'max' || key === 'p85') return val > limit ? 'var(--over-500)' : 'var(--ok-500)'
+    if (key === 'mean' || key === 'max' || key === 'p85') return val > limit ? 'var(--over-500)' : 'var(--ok-500)'
     if (key === 'overPct') return val > 15 ? 'var(--over-500)' : val > 5 ? 'var(--warn-500)' : 'var(--ok-500)'
     return 'var(--steel-200)'
   }
