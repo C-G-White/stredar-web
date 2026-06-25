@@ -376,18 +376,25 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [secondsAgo, setSecondsAgo] = useState(0)
   const [mode, setMode] = useState<Mode>('today')
-  const [customFrom, setCustomFrom] = useState('')
-  const [customTo, setCustomTo] = useState('')
+  const [customFrom, setCustomFrom] = useState('')  // committed — drives fetch
+  const [customTo, setCustomTo] = useState('')      // committed — drives fetch
+  const [draftFrom, setDraftFrom] = useState('')    // staged — inputs bind here
+  const [draftTo, setDraftTo] = useState('')        // staged — inputs bind here
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   function selectMode(next: Mode) {
-    if (next === 'custom' && !customFrom) {
+    if (next === 'custom' && !draftFrom) {
       const to = new Date(); to.setHours(0, 0, 0, 0)
       const from = new Date(to); from.setDate(from.getDate() - 1)
-      setCustomFrom(toDatetimeLocal(from))
-      setCustomTo(toDatetimeLocal(to))
+      setDraftFrom(toDatetimeLocal(from))
+      setDraftTo(toDatetimeLocal(to))
     }
     setMode(next)
+  }
+
+  function commitCustomRange() {
+    setCustomFrom(draftFrom)
+    setCustomTo(draftTo)
   }
 
   const fetchData = useCallback(async () => {
@@ -501,8 +508,8 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
             <span className="t-label" style={{ color: 'var(--steel-400)', minWidth: 28 }}>From</span>
             <input
               type="datetime-local"
-              value={customFrom}
-              onChange={e => setCustomFrom(e.target.value)}
+              value={draftFrom}
+              onChange={e => setDraftFrom(e.target.value)}
               style={{
                 fontFamily: 'var(--font-mono)', fontSize: 11, padding: '4px 8px',
                 background: 'var(--asphalt-600)', color: 'var(--steel-200)',
@@ -513,8 +520,8 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
             <span className="t-label" style={{ color: 'var(--steel-400)' }}>To</span>
             <input
               type="datetime-local"
-              value={customTo}
-              onChange={e => setCustomTo(e.target.value)}
+              value={draftTo}
+              onChange={e => setDraftTo(e.target.value)}
               style={{
                 fontFamily: 'var(--font-mono)', fontSize: 11, padding: '4px 8px',
                 background: 'var(--asphalt-600)', color: 'var(--steel-200)',
@@ -522,6 +529,21 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
                 colorScheme: 'dark',
               }}
             />
+            <button
+              onClick={commitCustomRange}
+              disabled={!draftFrom || !draftTo}
+              style={{
+                padding: '4px 12px',
+                fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                background: 'var(--hivis-500)', color: 'var(--white)',
+                border: 'var(--bd-accent)', borderRadius: 'var(--r-xs)',
+                cursor: draftFrom && draftTo ? 'pointer' : 'not-allowed',
+                opacity: draftFrom && draftTo ? 1 : 0.4,
+              }}
+            >
+              Set
+            </button>
           </div>
         )}
       </div>
