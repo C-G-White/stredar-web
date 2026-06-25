@@ -399,7 +399,7 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
 
   const fetchData = useCallback(async () => {
     const url = buildUrl(siteId, mode, customFrom, customTo)
-    if (!url) return
+    if (!url) { setLoading(false); return }
     try {
       const res = await fetch(url, { cache: 'no-store' })
       if (!res.ok) throw new Error('fetch failed')
