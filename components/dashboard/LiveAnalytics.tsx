@@ -62,13 +62,29 @@ type TrendPoint = {
 
 const POLL_INTERVAL = 10_000
 
-const LIMIT_OPTIONS = [
-  { label: 'Today', value: null },
-  { label: '500',   value: 500 },
-  { label: '1 000', value: 1000 },
-  { label: '2 000', value: 2000 },
-  { label: '5 000', value: 5000 },
-]
+type Mode = 'today' | 'yesterday' | 'custom'
+
+function toDatetimeLocal(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
+}
+
+function buildUrl(siteId: string, mode: Mode, customFrom: string, customTo: string): string | null {
+  const base = `/api/data?site_id=${siteId}`
+  if (mode === 'today') {
+    const from = new Date(); from.setHours(0, 0, 0, 0)
+    return `${base}&from=${from.toISOString()}&to=${new Date().toISOString()}`
+  }
+  if (mode === 'yesterday') {
+    const to = new Date(); to.setHours(0, 0, 0, 0)
+    const from = new Date(to); from.setDate(from.getDate() - 1)
+    return `${base}&from=${from.toISOString()}&to=${to.toISOString()}`
+  }
+  if (customFrom && customTo) {
+    return `${base}&from=${new Date(customFrom).toISOString()}&to=${new Date(customTo).toISOString()}`
+  }
+  return null
+}
 
 function avg(ns: number[]): number | null {
   return ns.length ? Math.round(ns.reduce((a, b) => a + b, 0) / ns.length) : null
@@ -352,14 +368,25 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
   const [error, setError] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [secondsAgo, setSecondsAgo] = useState(0)
-  const [selectedLimit, setSelectedLimit] = useState<number | null>(null)
+  const [mode, setMode] = useState<Mode>('today')
+  const [customFrom, setCustomFrom] = useState('')
+  const [customTo, setCustomTo] = useState('')
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  function selectMode(next: Mode) {
+    if (next === 'custom' && !customFrom) {
+      const to = new Date(); to.setHours(0, 0, 0, 0)
+      const from = new Date(to); from.setDate(from.getDate() - 1)
+      setCustomFrom(toDatetimeLocal(from))
+      setCustomTo(toDatetimeLocal(to))
+    }
+    setMode(next)
+  }
+
   const fetchData = useCallback(async () => {
+    const url = buildUrl(siteId, mode, customFrom, customTo)
+    if (!url) return
     try {
-      const url = selectedLimit
-        ? `/api/data?site_id=${siteId}&limit=${selectedLimit}`
-        : `/api/data?site_id=${siteId}`
       const res = await fetch(url, { cache: 'no-store' })
       if (!res.ok) throw new Error('fetch failed')
       const readings: Reading[] = await res.json()
@@ -372,7 +399,7 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
     } finally {
       setLoading(false)
     }
-  }, [siteId, speedLimitMph, selectedLimit])
+  }, [siteId, speedLimitMph, mode, customFrom, customTo])
 
   useEffect(() => {
     setLoading(true)
@@ -425,37 +452,65 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {LIMIT_OPTIONS.map(opt => {
-            const active = opt.value === selectedLimit
-            return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {(['today', 'yesterday', 'custom'] as Mode[]).map(m => (
               <button
-                key={opt.label}
-                onClick={() => setSelectedLimit(opt.value)}
+                key={m}
+                onClick={() => selectMode(m)}
                 style={{
                   padding: '4px 10px',
                   fontFamily: 'var(--font-mono)',
                   fontSize: 11,
                   letterSpacing: '0.06em',
-                  background: active ? 'var(--hivis-500)' : 'var(--asphalt-600)',
-                  color: active ? 'var(--white)' : 'var(--steel-300)',
-                  border: active ? 'var(--bd-accent)' : 'var(--bd-dark)',
+                  textTransform: 'uppercase',
+                  background: mode === m ? 'var(--hivis-500)' : 'var(--asphalt-600)',
+                  color: mode === m ? 'var(--white)' : 'var(--steel-300)',
+                  border: mode === m ? 'var(--bd-accent)' : 'var(--bd-dark)',
                   borderRadius: 'var(--r-xs)',
                   cursor: 'pointer',
                 }}
               >
-                {opt.label}
+                {m === 'today' ? 'Today' : m === 'yesterday' ? 'Yesterday' : 'Custom'}
               </button>
-            )
-          })}
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ok-500)', boxShadow: '0 0 6px rgba(25,195,125,.7)', display: 'inline-block', flexShrink: 0 }} />
+            <span className="t-label" style={{ color: 'var(--steel-300)' }}>
+              Updated {secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`} · refreshes every 10s
+            </span>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ok-500)', boxShadow: '0 0 6px rgba(25,195,125,.7)', display: 'inline-block', flexShrink: 0 }} />
-          <span className="t-label" style={{ color: 'var(--steel-300)' }}>
-            Updated {secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`} · refreshes every 10s
-          </span>
-        </div>
+        {mode === 'custom' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span className="t-label" style={{ color: 'var(--steel-400)', minWidth: 28 }}>From</span>
+            <input
+              type="datetime-local"
+              value={customFrom}
+              onChange={e => setCustomFrom(e.target.value)}
+              style={{
+                fontFamily: 'var(--font-mono)', fontSize: 11, padding: '4px 8px',
+                background: 'var(--asphalt-600)', color: 'var(--steel-200)',
+                border: '1px solid var(--steel-600)', borderRadius: 'var(--r-xs)',
+                colorScheme: 'dark',
+              }}
+            />
+            <span className="t-label" style={{ color: 'var(--steel-400)' }}>To</span>
+            <input
+              type="datetime-local"
+              value={customTo}
+              onChange={e => setCustomTo(e.target.value)}
+              style={{
+                fontFamily: 'var(--font-mono)', fontSize: 11, padding: '4px 8px',
+                background: 'var(--asphalt-600)', color: 'var(--steel-200)',
+                border: '1px solid var(--steel-600)', borderRadius: 'var(--r-xs)',
+                colorScheme: 'dark',
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Stat cards */}

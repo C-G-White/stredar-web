@@ -7,9 +7,20 @@ export async function GET(req: NextRequest) {
 
   if (siteId) {
     const limitParam = searchParams.get('limit')
+    const fromParam  = searchParams.get('from')
+    const toParam    = searchParams.get('to')
     const limit = limitParam ? parseInt(limitParam, 10) : null
 
-    const rows = limit
+    const rows = (fromParam && toParam)
+      ? await sql`
+          SELECT speed_mph, direction, entry_speed_mph, exit_speed_mph, recorded_at
+          FROM readings
+          WHERE site_id = ${siteId}
+            AND recorded_at >= ${fromParam}::timestamptz
+            AND recorded_at <  ${toParam}::timestamptz
+          ORDER BY recorded_at DESC
+        `
+      : limit
       ? await sql`
           SELECT speed_mph, direction, entry_speed_mph, exit_speed_mph, recorded_at
           FROM readings
