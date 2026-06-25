@@ -62,7 +62,7 @@ type TrendPoint = {
 
 const POLL_INTERVAL = 10_000
 
-type Mode = 'today' | 'yesterday' | 'custom'
+type Mode = 'today' | 'yesterday' | 'last7' | 'all' | 'custom'
 
 function toDatetimeLocal(d: Date): string {
   const p = (n: number) => String(n).padStart(2, '0')
@@ -79,6 +79,13 @@ function buildUrl(siteId: string, mode: Mode, customFrom: string, customTo: stri
     const to = new Date(); to.setHours(0, 0, 0, 0)
     const from = new Date(to); from.setDate(from.getDate() - 1)
     return `${base}&from=${from.toISOString()}&to=${to.toISOString()}`
+  }
+  if (mode === 'last7') {
+    const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    return `${base}&from=${from.toISOString()}&to=${new Date().toISOString()}`
+  }
+  if (mode === 'all') {
+    return `${base}&all=true`
   }
   if (customFrom && customTo) {
     return `${base}&from=${new Date(customFrom).toISOString()}&to=${new Date(customTo).toISOString()}`
@@ -455,24 +462,30 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
           <div style={{ display: 'flex', gap: 4 }}>
-            {(['today', 'yesterday', 'custom'] as Mode[]).map(m => (
+            {([
+              { id: 'today',     label: 'Today' },
+              { id: 'yesterday', label: 'Yesterday' },
+              { id: 'last7',     label: 'Last 7 Days' },
+              { id: 'all',       label: 'All' },
+              { id: 'custom',    label: 'Custom' },
+            ] as { id: Mode; label: string }[]).map(({ id, label }) => (
               <button
-                key={m}
-                onClick={() => selectMode(m)}
+                key={id}
+                onClick={() => selectMode(id)}
                 style={{
                   padding: '4px 10px',
                   fontFamily: 'var(--font-mono)',
                   fontSize: 11,
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
-                  background: mode === m ? 'var(--hivis-500)' : 'var(--asphalt-600)',
-                  color: mode === m ? 'var(--white)' : 'var(--steel-300)',
-                  border: mode === m ? 'var(--bd-accent)' : 'var(--bd-dark)',
+                  background: mode === id ? 'var(--hivis-500)' : 'var(--asphalt-600)',
+                  color: mode === id ? 'var(--white)' : 'var(--steel-300)',
+                  border: mode === id ? 'var(--bd-accent)' : 'var(--bd-dark)',
                   borderRadius: 'var(--r-xs)',
                   cursor: 'pointer',
                 }}
               >
-                {m === 'today' ? 'Today' : m === 'yesterday' ? 'Yesterday' : 'Custom'}
+                {label}
               </button>
             ))}
           </div>

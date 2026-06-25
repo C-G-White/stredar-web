@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
     const limitParam = searchParams.get('limit')
     const fromParam  = searchParams.get('from')
     const toParam    = searchParams.get('to')
+    const allParam   = searchParams.get('all')
     const limit = limitParam ? parseInt(limitParam, 10) : null
 
     const rows = (fromParam && toParam)
@@ -18,6 +19,13 @@ export async function GET(req: NextRequest) {
           WHERE site_id = ${siteId}
             AND recorded_at >= ${fromParam}::timestamptz
             AND recorded_at <  ${toParam}::timestamptz
+          ORDER BY recorded_at DESC
+        `
+      : allParam
+      ? await sql`
+          SELECT speed_mph, direction, entry_speed_mph, exit_speed_mph, recorded_at
+          FROM readings
+          WHERE site_id = ${siteId}
           ORDER BY recorded_at DESC
         `
       : limit
