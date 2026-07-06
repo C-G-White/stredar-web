@@ -39,6 +39,8 @@ type Stats = {
   overPct: number | null
   histogram: HistBin[]
   trend: TrendPoint[]
+  trendInbound: TrendPoint[]
+  trendOutbound: TrendPoint[]
   recent: Reading[]
   approaching: DirectionStats
   receding: DirectionStats
@@ -114,7 +116,7 @@ function dirStats(subset: Reading[], limit: number): DirectionStats {
 function compute(readings: Reading[], limit: number): Stats {
   const empty: Stats = {
     total: 0, maxSpeed: null, p85: null, overCount: 0, overPct: null,
-    histogram: [], trend: [], recent: [],
+    histogram: [], trend: [], trendInbound: [], trendOutbound: [], recent: [],
     approaching: { count: 0, mean: null, max: null, p85: null, overPct: null },
     receding:    { count: 0, mean: null, max: null, p85: null, overPct: null },
     hasDirectionData: false, displayEffect: null,
@@ -139,15 +141,9 @@ function compute(readings: Reading[], limit: number): Stats {
   const maxCount = Math.max(...rawBins.map(b => b.count), 1)
   const histogram = rawBins.map(b => ({ ...b, pct: Math.round((b.count / maxCount) * 100) }))
 
-  const trend = [...readings]
-    .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
-    .slice(-100)
-    .map(r => ({
-      speed: r.speed_mph,
-      recorded_at: r.recorded_at,
-      isOver: r.speed_mph > limit,
-      isWarn: r.speed_mph > limit * 0.9 && r.speed_mph <= limit,
-    }))
+  const trend = buildTrend(readings, limit)
+  const trendInbound = buildTrend(readings.filter(r => r.direction === 1), limit)
+  const trendOutbound = buildTrend(readings.filter(r => r.direction === -1), limit)
 
   const recent = [...readings]
     .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())
@@ -185,8 +181,20 @@ function compute(readings: Reading[], limit: number): Stats {
     }
   }
 
-  return { total, maxSpeed, p85, overCount, overPct, histogram, trend, recent,
+  return { total, maxSpeed, p85, overCount, overPct, histogram, trend, trendInbound, trendOutbound, recent,
            approaching, receding, hasDirectionData, displayEffect }
+}
+
+function buildTrend(readings: Reading[], limit: number): TrendPoint[] {
+  return [...readings]
+    .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
+    .slice(-100)
+    .map(r => ({
+      speed: r.speed_mph,
+      recorded_at: r.recorded_at,
+      isOver: r.speed_mph > limit,
+      isWarn: r.speed_mph > limit * 0.9 && r.speed_mph <= limit,
+    }))
 }
 
 function DisplayEffectPanel({ effect, limit }: { effect: DisplayEffect; limit: number }) {
@@ -369,6 +377,30 @@ function TrendChart({ trend, limit }: { trend: TrendPoint[]; limit: number }) {
         )
       })}
     </svg>
+  )
+}
+
+function TrendCard({ title, trend, limit }: { title: string; trend: TrendPoint[]; limit: number }) {
+  return (
+    <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-md)', padding: 'var(--sp-6)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-3)' }}>
+        <p className="t-label" style={{ color: 'var(--steel-300)' }}>{title}</p>
+        <p className="t-label" style={{ color: 'var(--steel-400)' }}>Last {trend.length} readings</p>
+      </div>
+      <TrendChart trend={trend} limit={limit} />
+      <div style={{ display: 'flex', gap: 'var(--sp-6)', marginTop: 'var(--sp-3)' }}>
+        {[
+          { color: 'var(--ok-500)',   label: 'Within limit' },
+          { color: 'var(--warn-500)', label: 'Approaching limit' },
+          { color: 'var(--over-500)', label: 'Over limit' },
+        ].map(item => (
+          <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, flexShrink: 0 }} />
+            <span className="t-label" style={{ color: 'var(--steel-400)' }}>{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -626,26 +658,15 @@ export default function LiveAnalytics({ siteId, speedLimitMph }: { siteId: strin
         </div>
       </div>
 
-      {/* Trend chart */}
-      <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-md)', padding: 'var(--sp-6)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-3)' }}>
-          <p className="t-label" style={{ color: 'var(--steel-300)' }}>Speed Over Time</p>
-          <p className="t-label" style={{ color: 'var(--steel-400)' }}>Last {stats.trend.length} readings</p>
-        </div>
-        <TrendChart trend={stats.trend} limit={speedLimitMph} />
-        <div style={{ display: 'flex', gap: 'var(--sp-6)', marginTop: 'var(--sp-3)' }}>
-          {[
-            { color: 'var(--ok-500)',   label: 'Within limit' },
-            { color: 'var(--warn-500)', label: 'Approaching limit' },
-            { color: 'var(--over-500)', label: 'Over limit' },
-          ].map(item => (
-            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, flexShrink: 0 }} />
-              <span className="t-label" style={{ color: 'var(--steel-400)' }}>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Trend chart(s) */}
+      {stats.hasDirectionData ? (
+        <>
+          <TrendCard title="Speed Over Time — Inbound" trend={stats.trendInbound} limit={speedLimitMph} />
+          <TrendCard title="Speed Over Time — Outbound" trend={stats.trendOutbound} limit={speedLimitMph} />
+        </>
+      ) : (
+        <TrendCard title="Speed Over Time" trend={stats.trend} limit={speedLimitMph} />
+      )}
 
       {/* Recent passes */}
       <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
