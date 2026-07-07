@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from '@/lib/db'
 import { auth } from '@/lib/auth'
-import { computeScenarioStats, compareAllPairs, type ReadingRow } from '@/lib/reportStats'
+import { computeScenarioStats, compareAllPairs, deriveFocusDirection, type ReadingRow, type SpeedsByDirection } from '@/lib/reportStats'
 import { generateNarrative } from '@/lib/reportNarrative'
 import type { Scenario, ScenarioStats, ReportStatsPayload, Site } from '@/lib/types'
 
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   // Preserve the order the caller selected them in.
   const scenarios = (scenario_ids as string[]).map(id => scenarioRows.find(s => s.id === id)!)
 
-  const speedsByScenarioId: Record<string, number[]> = {}
+  const speedsById: SpeedsByDirection = {}
   const scenarioStats: ScenarioStats[] = []
 
   for (const scenario of scenarios) {
@@ -66,16 +66,21 @@ export async function POST(req: NextRequest, { params }: Params) {
       ORDER BY recorded_at ASC
     ` as unknown as ReadingRow[]
 
-    speedsByScenarioId[scenario.id] = readings.map(r => r.speed_mph)
+    speedsById[scenario.id] = {
+      overall: readings.map(r => r.speed_mph),
+      inbound: readings.filter(r => r.direction === 1).map(r => r.speed_mph),
+      outbound: readings.filter(r => r.direction === -1).map(r => r.speed_mph),
+    }
     scenarioStats.push(computeScenarioStats(readings, site.speed_limit_mph, scenario))
   }
 
-  const comparisons = compareAllPairs(scenarioStats, speedsByScenarioId)
+  const comparisons = compareAllPairs(scenarioStats, speedsById)
 
   const stats: ReportStatsPayload = {
     speed_limit_mph: site.speed_limit_mph,
     scenarios: scenarioStats,
     comparisons,
+    focus_direction: deriveFocusDirection(scenarios),
   }
 
   const title =

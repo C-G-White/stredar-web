@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS scenarios (
   description TEXT,
   starts_at   TIMESTAMPTZ NOT NULL,
   ends_at     TIMESTAMPTZ, -- NULL = ongoing (uses now() at report time)
+  affected_direction TEXT, -- 'inbound' | 'outbound' | 'both' | NULL (no directional intervention)
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

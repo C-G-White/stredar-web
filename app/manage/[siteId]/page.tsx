@@ -178,6 +178,7 @@ export default function UnitPage() {
   const [draft, setDraft]         = useState<Config | null>(null)
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null)
   const [reports, setReports]     = useState<ReportListItem[]>([])
+  const [confirmDeleteReportId, setConfirmDeleteReportId] = useState<string | null>(null)
   const [loading, setLoading]     = useState(true)
   const [saving, setSaving]       = useState(false)
   const [saveMsg, setSaveMsg]     = useState('')
@@ -219,6 +220,12 @@ export default function UnitPage() {
     const id = setInterval(load, 30_000)
     return () => clearInterval(id)
   }, [load])
+
+  async function deleteReport(reportId: string) {
+    await fetch(`/api/admin/sites/${siteId}/reports/${reportId}`, { method: 'DELETE' })
+    setConfirmDeleteReportId(null)
+    setReports(prev => prev.filter(r => r.id !== reportId))
+  }
 
   async function save() {
     if (!draft) return
@@ -503,19 +510,34 @@ export default function UnitPage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
             {reports.map(r => (
-              <Link key={r.id} href={`/manage/${siteId}/report/${r.id}`} style={{ textDecoration: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3)', background: 'var(--asphalt-600)', borderRadius: 'var(--r-sm)' }}>
-                  <div>
-                    <p className="t-body-sm" style={{ color: 'var(--white)', fontWeight: 600 }}>{r.title}</p>
-                    <p className="t-label" style={{ color: 'var(--steel-400)' }}>
-                      {r.scenarios_snapshot.map(s => s.name).join(' vs ')}
-                    </p>
+              <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+                <Link href={`/manage/${siteId}/report/${r.id}`} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3)', background: 'var(--asphalt-600)', borderRadius: 'var(--r-sm)' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <p className="t-body-sm" style={{ color: 'var(--white)', fontWeight: 600 }}>{r.title}</p>
+                      <p className="t-label" style={{ color: 'var(--steel-400)' }}>
+                        {r.scenarios_snapshot.map(s => s.name).join(' vs ')}
+                      </p>
+                    </div>
+                    <span className="t-label" style={{ color: 'var(--steel-400)', whiteSpace: 'nowrap' }}>
+                      {new Date(r.created_at).toLocaleDateString()}
+                    </span>
                   </div>
-                  <span className="t-label" style={{ color: 'var(--steel-400)', whiteSpace: 'nowrap' }}>
-                    {new Date(r.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              </Link>
+                </Link>
+                {confirmDeleteReportId === r.id ? (
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                    <button onClick={() => deleteReport(r.id)} style={{ background: 'var(--over-500)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, padding: '8px 10px', cursor: 'pointer' }}>Delete</button>
+                    <button onClick={() => setConfirmDeleteReportId(null)} style={{ background: 'none', border: 'none', color: 'var(--steel-300)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDeleteReportId(r.id)}
+                    style={{ flexShrink: 0, background: 'none', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--steel-400)', fontSize: 12, padding: '8px 10px', cursor: 'pointer' }}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         )}

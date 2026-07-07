@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+type AffectedDirection = 'inbound' | 'outbound' | 'both' | null
+
 type Scenario = {
   id: string
   site_id: string
@@ -11,13 +13,21 @@ type Scenario = {
   description: string | null
   starts_at: string
   ends_at: string | null
+  affected_direction: AffectedDirection
 }
 
-function toLocalInputValue(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+function toAffectedDirection(inbound: boolean, outbound: boolean): AffectedDirection {
+  if (inbound && outbound) return 'both'
+  if (inbound) return 'inbound'
+  if (outbound) return 'outbound'
+  return null
+}
+
+function directionLabel(d: AffectedDirection): string {
+  if (d === 'inbound') return 'Affects inbound only'
+  if (d === 'outbound') return 'Affects outbound only'
+  if (d === 'both') return 'Affects both directions'
+  return 'No directional intervention'
 }
 
 function fieldStyle(): React.CSSProperties {
@@ -52,6 +62,8 @@ export default function NewReportPage() {
   const [startsAt, setStartsAt] = useState('')
   const [endsAt, setEndsAt] = useState('')
   const [ongoing, setOngoing] = useState(false)
+  const [affectsInbound, setAffectsInbound] = useState(false)
+  const [affectsOutbound, setAffectsOutbound] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
@@ -82,10 +94,12 @@ export default function NewReportPage() {
         description: description.trim() || null,
         starts_at: new Date(startsAt).toISOString(),
         ends_at: ongoing || !endsAt ? null : new Date(endsAt).toISOString(),
+        affected_direction: toAffectedDirection(affectsInbound, affectsOutbound),
       }),
     })
     if (r.ok) {
       setName(''); setDescription(''); setStartsAt(''); setEndsAt(''); setOngoing(false)
+      setAffectsInbound(false); setAffectsOutbound(false)
       await load()
     } else {
       setError((await r.json()).error ?? 'Failed to save scenario')
@@ -153,6 +167,22 @@ export default function NewReportPage() {
                 Ongoing (no end date yet)
               </label>
             </div>
+            <div style={{ gridColumn: 'span 2' }}>
+              <label className="t-label" style={{ color: 'var(--steel-200)' }}>Which direction does this scenario affect?</label>
+              <div style={{ display: 'flex', gap: 'var(--sp-5)', marginTop: 6 }}>
+                <label className="t-body-sm" style={{ color: 'var(--steel-200)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input type="checkbox" checked={affectsInbound} onChange={e => setAffectsInbound(e.target.checked)} />
+                  Inbound
+                </label>
+                <label className="t-body-sm" style={{ color: 'var(--steel-200)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input type="checkbox" checked={affectsOutbound} onChange={e => setAffectsOutbound(e.target.checked)} />
+                  Outbound
+                </label>
+              </div>
+              <p className="t-body-sm" style={{ color: 'var(--steel-400)', marginTop: 6 }}>
+                Leave both unchecked for a baseline period with no directional intervention. Check one (e.g. a sign facing inbound traffic only) to have the report treat that direction as primary evidence and the other as an unaffected control. Check both for a whole-site measure, e.g. a physical chicane that affects traffic both ways.
+              </p>
+            </div>
           </div>
           <button
             onClick={addScenario}
@@ -194,6 +224,7 @@ export default function NewReportPage() {
                     <p className="t-body-sm" style={{ color: 'var(--white)', fontWeight: 600 }}>{s.name}</p>
                     <p className="t-label" style={{ color: 'var(--steel-400)' }}>
                       {new Date(s.starts_at).toLocaleDateString()} – {s.ends_at ? new Date(s.ends_at).toLocaleDateString() : 'ongoing'}
+                      {' · '}{directionLabel(s.affected_direction)}
                       {s.description ? ` · ${s.description}` : ''}
                     </p>
                   </div>

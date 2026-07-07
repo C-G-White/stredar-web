@@ -68,6 +68,8 @@ export type Command = {
 
 // ── Scenario comparison reports ──────────────────────────────────────────────
 
+export type AffectedDirection = 'inbound' | 'outbound' | 'both' | null
+
 export type Scenario = {
   id: string
   site_id: string
@@ -75,13 +77,24 @@ export type Scenario = {
   description: string | null
   starts_at: string
   ends_at: string | null  // null = ongoing (uses now() when a report is generated)
+  // Which direction of travel this scenario's intervention targets (e.g. a sign
+  // only visible to inbound traffic). null = no directional intervention (e.g. a
+  // baseline period), 'both' = affects both directions (e.g. a physical chicane).
+  affected_direction: AffectedDirection
   created_at: string
 }
 
+// One set of measured metrics — used for the overall figure and, separately,
+// for each direction of travel, so a directional intervention can be checked
+// against the unaffected direction as a control.
 export type DirectionStats = {
   count: number
-  mean_speed_mph: number
-  p85_speed_mph: number
+  passes_per_day: number
+  mean_speed_mph: number | null
+  median_speed_mph: number | null
+  p85_speed_mph: number | null
+  max_speed_mph: number | null
+  pct_over_limit: number | null
 }
 
 export type ScenarioStats = {
@@ -90,13 +103,7 @@ export type ScenarioStats = {
   starts_at: string
   ends_at: string | null
   duration_days: number
-  total_passes: number
-  passes_per_day: number
-  mean_speed_mph: number | null
-  median_speed_mph: number | null
-  p85_speed_mph: number | null
-  max_speed_mph: number | null
-  pct_over_limit: number | null
+  overall: DirectionStats
   by_direction: { inbound: DirectionStats | null; outbound: DirectionStats | null } | null
   display_effectiveness: {
     count: number
@@ -109,6 +116,12 @@ export type ScenarioStats = {
 export type ScenarioComparison = {
   a_scenario_id: string
   b_scenario_id: string
+  // 'overall' blends both directions; 'inbound'/'outbound' isolate one direction
+  // of travel so a directional intervention (e.g. a sign facing inbound traffic
+  // only) can be checked against the other, unaffected direction as a control.
+  direction: 'overall' | 'inbound' | 'outbound'
+  n_a: number
+  n_b: number
   delta_mean_speed_mph: number | null
   delta_p85_speed_mph: number | null
   delta_pct_over_limit: number | null
@@ -121,6 +134,10 @@ export type ReportStatsPayload = {
   speed_limit_mph: number
   scenarios: ScenarioStats[]
   comparisons: ScenarioComparison[]
+  // The direction of travel the report should treat as the primary evidence,
+  // derived from the selected scenarios' affected_direction. 'overall' means no
+  // scenario specified a directional intervention, so directions aren't split.
+  focus_direction: 'overall' | 'inbound' | 'outbound'
 }
 
 export type Report = {

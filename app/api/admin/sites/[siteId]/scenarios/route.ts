@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { name, description, starts_at, ends_at } = body as Record<string, unknown>
+  const { name, description, starts_at, ends_at, affected_direction } = body as Record<string, unknown>
   if (typeof name !== 'string' || !name.trim()) {
     return NextResponse.json({ error: 'name is required' }, { status: 400 })
   }
@@ -38,17 +38,22 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (ends_at != null && (typeof ends_at !== 'string' || Number.isNaN(Date.parse(ends_at)))) {
     return NextResponse.json({ error: 'ends_at must be a valid date or null' }, { status: 400 })
   }
+  if (affected_direction != null && !['inbound', 'outbound', 'both'].includes(affected_direction as string)) {
+    return NextResponse.json({ error: 'affected_direction must be inbound, outbound, both, or null' }, { status: 400 })
+  }
 
   const endsAtValue = typeof ends_at === 'string' ? ends_at : null
+  const affectedDirectionValue = typeof affected_direction === 'string' ? affected_direction : null
 
   const [created] = await sql`
-    INSERT INTO scenarios (site_id, name, description, starts_at, ends_at)
+    INSERT INTO scenarios (site_id, name, description, starts_at, ends_at, affected_direction)
     VALUES (
       ${siteId},
       ${name.trim()},
       ${typeof description === 'string' ? description.trim() || null : null},
       ${starts_at}::timestamptz,
-      ${endsAtValue}::timestamptz
+      ${endsAtValue}::timestamptz,
+      ${affectedDirectionValue}
     )
     RETURNING *
   `

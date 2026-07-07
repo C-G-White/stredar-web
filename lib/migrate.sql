@@ -85,8 +85,11 @@ CREATE TABLE IF NOT EXISTS scenarios (
   description TEXT,
   starts_at   TIMESTAMPTZ NOT NULL,
   ends_at     TIMESTAMPTZ,
+  affected_direction TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE scenarios ADD COLUMN IF NOT EXISTS affected_direction TEXT;
 
 CREATE INDEX IF NOT EXISTS scenarios_site
   ON scenarios (site_id);

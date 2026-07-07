@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Report, ScenarioStats, ScenarioComparison } from '@/lib/types'
+import { normalizeReportStats, normalizeScenarioSnapshot } from '@/lib/reportStats'
 
 type SiteInfo = { id: string; name: string; address: string }
 
@@ -55,18 +56,38 @@ function NarrativeBlock({ text }: { text: string }) {
   )
 }
 
-function comparisonLabel(c: ScenarioComparison, scenarios: ScenarioStats[]): string {
-  const a = scenarios.find(s => s.scenario_id === c.a_scenario_id)?.name ?? '?'
-  const b = scenarios.find(s => s.scenario_id === c.b_scenario_id)?.name ?? '?'
+function comparisonLabel(a_id: string, b_id: string, scenarios: ScenarioStats[]): string {
+  const a = scenarios.find(s => s.scenario_id === a_id)?.name ?? '?'
+  const b = scenarios.find(s => s.scenario_id === b_id)?.name ?? '?'
   return `${a} vs ${b}`
+}
+
+function directionRowLabel(direction: ScenarioComparison['direction'], focusDirection: 'overall' | 'inbound' | 'outbound'): string {
+  if (direction === 'overall') return 'Overall (both directions blended)'
+  const isFocus = direction === focusDirection
+  const roleLabel = isFocus ? 'primary evidence' : 'control — unaffected direction'
+  return `${direction === 'inbound' ? 'Inbound' : 'Outbound'} (${roleLabel})`
+}
+
+function groupComparisonsByPair(comparisons: ScenarioComparison[]) {
+  const pairs = new Map<string, { a_scenario_id: string; b_scenario_id: string; rows: ScenarioComparison[] }>()
+  for (const c of comparisons) {
+    const key = `${c.a_scenario_id}:${c.b_scenario_id}`
+    if (!pairs.has(key)) pairs.set(key, { a_scenario_id: c.a_scenario_id, b_scenario_id: c.b_scenario_id, rows: [] })
+    pairs.get(key)!.rows.push(c)
+  }
+  return [...pairs.values()]
 }
 
 export default function ReportViewPage() {
   const { siteId, reportId } = useParams<{ siteId: string; reportId: string }>()
+  const router = useRouter()
   const [report, setReport] = useState<Report | null>(null)
   const [site, setSite] = useState<SiteInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [showDelete, setShowDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -75,7 +96,10 @@ export default function ReportViewPage() {
         fetch('/api/admin/sites'),
       ])
       if (reportRes.ok) {
-        setReport(await reportRes.json())
+        const data: Report = await reportRes.json()
+        data.stats = normalizeReportStats(data.stats)
+        data.scenarios_snapshot = data.scenarios_snapshot.map(normalizeScenarioSnapshot)
+        setReport(data)
       } else {
         setError('Report not found')
       }
@@ -87,6 +111,12 @@ export default function ReportViewPage() {
     }
     load()
   }, [siteId, reportId])
+
+  async function deleteReport() {
+    setDeleting(true)
+    await fetch(`/api/admin/sites/${siteId}/reports/${reportId}`, { method: 'DELETE' })
+    router.push(`/manage/${siteId}`)
+  }
 
   if (loading) return <div style={{ padding: 'var(--sp-8) var(--sp-6)' }}><p className="t-body-sm" style={{ color: 'var(--steel-300)' }}>Loading…</p></div>
   if (error || !report) return (
@@ -118,12 +148,30 @@ export default function ReportViewPage() {
         <Link href={`/manage/${siteId}`} className="t-label" style={{ color: 'var(--steel-400)', textDecoration: 'none' }}>
           ← Back to unit
         </Link>
-        <button
-          onClick={() => window.print()}
-          style={{ background: 'var(--hivis-500)', color: 'var(--white)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, padding: '10px 20px', cursor: 'pointer' }}
-        >
-          Print report
-        </button>
+        <div style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'center' }}>
+          {!showDelete ? (
+            <button
+              onClick={() => setShowDelete(true)}
+              style={{ background: 'none', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)', color: 'var(--over-500)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, padding: '10px 16px', cursor: 'pointer' }}
+            >
+              Delete report
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
+              <span className="t-body-sm" style={{ color: 'var(--over-500)' }}>Delete permanently?</span>
+              <button onClick={deleteReport} disabled={deleting} style={{ background: 'var(--over-500)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, padding: '8px 14px', cursor: deleting ? 'wait' : 'pointer' }}>
+                {deleting ? 'Deleting…' : 'Yes, delete'}
+              </button>
+              <button onClick={() => setShowDelete(false)} style={{ background: 'none', border: 'none', color: 'var(--steel-300)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+            </div>
+          )}
+          <button
+            onClick={() => window.print()}
+            style={{ background: 'var(--hivis-500)', color: 'var(--white)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, padding: '10px 20px', cursor: 'pointer' }}
+          >
+            Print report
+          </button>
+        </div>
       </div>
 
       <div style={{ marginBottom: 'var(--sp-6)' }}>
@@ -144,11 +192,21 @@ export default function ReportViewPage() {
               <p className="t-body-sm" style={{ color: 'var(--white)', fontWeight: 600 }}>{s.name}</p>
               <p className="t-label" style={{ color: 'var(--steel-400)' }}>
                 {new Date(s.starts_at).toLocaleDateString()} – {s.ends_at ? new Date(s.ends_at).toLocaleDateString() : 'ongoing'}
+                {' · '}
+                {s.affected_direction === 'inbound' && 'Affects inbound only'}
+                {s.affected_direction === 'outbound' && 'Affects outbound only'}
+                {s.affected_direction === 'both' && 'Affects both directions'}
+                {!s.affected_direction && 'No directional intervention'}
                 {s.description ? ` · ${s.description}` : ''}
               </p>
             </div>
           ))}
         </div>
+        {stats.focus_direction !== 'overall' && (
+          <p className="t-body-sm" style={{ color: 'var(--hivis-500)', marginTop: 'var(--sp-3)' }}>
+            This report treats {stats.focus_direction} as the primary evidence, using the other direction as an unaffected control recorded in the same periods.
+          </p>
+        )}
       </div>
 
       {/* Stats table */}
@@ -167,17 +225,21 @@ export default function ReportViewPage() {
           </thead>
           <tbody>
             {metricRow('Duration (days)', scenarios, s => fmt(s.duration_days))}
-            {metricRow('Total passes', scenarios, s => fmt(s.total_passes))}
-            {metricRow('Passes / day', scenarios, s => fmt(s.passes_per_day))}
-            {metricRow('Mean speed', scenarios, s => fmt(s.mean_speed_mph, ' mph'))}
-            {metricRow('Median speed', scenarios, s => fmt(s.median_speed_mph, ' mph'))}
-            {metricRow('85th percentile speed', scenarios, s => fmt(s.p85_speed_mph, ' mph'))}
-            {metricRow('Max speed', scenarios, s => fmt(s.max_speed_mph, ' mph'))}
-            {metricRow('% over limit', scenarios, s => fmt(s.pct_over_limit, '%'))}
-            {metricRow('Inbound mean / 85th', scenarios, s =>
-              s.by_direction?.inbound ? `${s.by_direction.inbound.mean_speed_mph} / ${s.by_direction.inbound.p85_speed_mph} mph` : '—')}
-            {metricRow('Outbound mean / 85th', scenarios, s =>
-              s.by_direction?.outbound ? `${s.by_direction.outbound.mean_speed_mph} / ${s.by_direction.outbound.p85_speed_mph} mph` : '—')}
+            {metricRow('Total passes', scenarios, s => fmt(s.overall.count))}
+            {metricRow('Passes / day', scenarios, s => fmt(s.overall.passes_per_day))}
+            {metricRow('Mean speed (overall)', scenarios, s => fmt(s.overall.mean_speed_mph, ' mph'))}
+            {metricRow('Median speed (overall)', scenarios, s => fmt(s.overall.median_speed_mph, ' mph'))}
+            {metricRow('85th percentile (overall)', scenarios, s => fmt(s.overall.p85_speed_mph, ' mph'))}
+            {metricRow('Max speed (overall)', scenarios, s => fmt(s.overall.max_speed_mph, ' mph'))}
+            {metricRow('% over limit (overall)', scenarios, s => fmt(s.overall.pct_over_limit, '%'))}
+            {metricRow('Inbound: mean / 85th / % over', scenarios, s =>
+              s.by_direction?.inbound
+                ? `${fmt(s.by_direction.inbound.mean_speed_mph)} / ${fmt(s.by_direction.inbound.p85_speed_mph)} mph / ${fmt(s.by_direction.inbound.pct_over_limit, '%')}`
+                : '—')}
+            {metricRow('Outbound: mean / 85th / % over', scenarios, s =>
+              s.by_direction?.outbound
+                ? `${fmt(s.by_direction.outbound.mean_speed_mph)} / ${fmt(s.by_direction.outbound.p85_speed_mph)} mph / ${fmt(s.by_direction.outbound.pct_over_limit, '%')}`
+                : '—')}
             {metricRow('Display effect (entry → exit)', scenarios, s =>
               s.display_effectiveness
                 ? `${s.display_effectiveness.mean_entry_mph} → ${s.display_effectiveness.mean_exit_mph} mph (${s.display_effectiveness.mean_delta_mph >= 0 ? '+' : ''}${s.display_effectiveness.mean_delta_mph})`
@@ -189,20 +251,38 @@ export default function ReportViewPage() {
       {/* Comparisons */}
       <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)', marginBottom: 'var(--sp-4)' }}>
         <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-3)' }}>Pairwise Comparison</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-          {stats.comparisons.map((c, i) => (
-            <div key={i} style={{ padding: 'var(--sp-3)', background: 'var(--asphalt-600)', borderRadius: 'var(--r-sm)' }}>
-              <p className="t-body-sm" style={{ color: 'var(--white)', fontWeight: 600, marginBottom: 4 }}>{comparisonLabel(c, scenarios)}</p>
-              <p className="t-body-sm" style={{ color: 'var(--steel-200)' }}>
-                Δ mean speed: {fmt(c.delta_mean_speed_mph, ' mph')} · Δ 85th percentile: {fmt(c.delta_p85_speed_mph, ' mph')} · Δ % over limit: {fmt(c.delta_pct_over_limit, ' pts')} · Δ volume: {fmt(c.delta_passes_per_day, '/day')}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+          {groupComparisonsByPair(stats.comparisons).map((pair, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+              <p className="t-body-sm" style={{ color: 'var(--white)', fontWeight: 600 }}>
+                {comparisonLabel(pair.a_scenario_id, pair.b_scenario_id, scenarios)}
               </p>
-              <p className="t-label" style={{ color: c.significant ? 'var(--ok-500)' : 'var(--steel-400)', marginTop: 4 }}>
-                {c.p_value == null
-                  ? 'Not enough data for a significance test'
-                  : c.significant
-                  ? `Statistically significant difference in mean speed (p = ${c.p_value})`
-                  : `Not statistically significant (p = ${c.p_value}) — could be due to chance`}
-              </p>
+              {pair.rows
+                .slice()
+                .sort((a, b) => (a.direction === 'overall' ? -1 : b.direction === 'overall' ? 1 : a.direction.localeCompare(b.direction)))
+                .map((c, j) => {
+                  const isPrimary = c.direction !== 'overall' && c.direction === stats.focus_direction
+                  return (
+                    <div key={j} style={{
+                      padding: 'var(--sp-3)', background: 'var(--asphalt-600)', borderRadius: 'var(--r-sm)',
+                      border: isPrimary ? 'var(--bd-accent)' : 'var(--bd-dark)',
+                    }}>
+                      <p className="t-label" style={{ color: isPrimary ? 'var(--hivis-500)' : 'var(--steel-300)', marginBottom: 4 }}>
+                        {directionRowLabel(c.direction, stats.focus_direction)} · n = {c.n_a} vs {c.n_b}
+                      </p>
+                      <p className="t-body-sm" style={{ color: 'var(--steel-200)' }}>
+                        Δ mean speed: {fmt(c.delta_mean_speed_mph, ' mph')} · Δ 85th percentile: {fmt(c.delta_p85_speed_mph, ' mph')} · Δ % over limit: {fmt(c.delta_pct_over_limit, ' pts')} · Δ volume: {fmt(c.delta_passes_per_day, '/day')}
+                      </p>
+                      <p className="t-label" style={{ color: c.significant ? 'var(--ok-500)' : 'var(--steel-400)', marginTop: 4 }}>
+                        {c.p_value == null
+                          ? 'Not enough data for a significance test'
+                          : c.significant
+                          ? `Statistically significant difference in mean speed (p = ${c.p_value})`
+                          : `Not statistically significant (p = ${c.p_value}) — could be due to chance`}
+                      </p>
+                    </div>
+                  )
+                })}
             </div>
           ))}
         </div>
