@@ -100,11 +100,12 @@ CREATE TABLE IF NOT EXISTS scenarios (
 CREATE INDEX IF NOT EXISTS scenarios_site
   ON scenarios (site_id);
 
--- ── Generated comparison reports (immutable snapshots) ───────────────────────
+-- ── Generated reports (immutable snapshots) ──────────────────────────────────
 CREATE TABLE IF NOT EXISTS reports (
   id                 UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   site_id            UUID        NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
   title              TEXT        NOT NULL,
+  report_type        TEXT        NOT NULL DEFAULT 'comparison', -- 'comparison' | 'overview'
   scenario_ids       UUID[]      NOT NULL,
   scenarios_snapshot JSONB       NOT NULL,
   stats              JSONB       NOT NULL,

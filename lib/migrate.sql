@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS reports (
   id                 UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   site_id            UUID        NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
   title              TEXT        NOT NULL,
+  report_type        TEXT        NOT NULL DEFAULT 'comparison',
   scenario_ids       UUID[]      NOT NULL,
   scenarios_snapshot JSONB       NOT NULL,
   stats              JSONB       NOT NULL,
@@ -105,6 +106,8 @@ CREATE TABLE IF NOT EXISTS reports (
   generated_by       TEXT,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS report_type TEXT NOT NULL DEFAULT 'comparison';
 
 CREATE INDEX IF NOT EXISTS reports_site_created
   ON reports (site_id, created_at DESC);

@@ -175,7 +175,9 @@ export default function ReportViewPage() {
       </div>
 
       <div style={{ marginBottom: 'var(--sp-6)' }}>
-        <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-2)' }}>Stredar Comparison Report</p>
+        <p className="t-label" style={{ color: 'var(--hivis-500)', marginBottom: 'var(--sp-2)' }}>
+          {report.report_type === 'overview' ? 'Stredar Site Overview Report' : 'Stredar Comparison Report'}
+        </p>
         <h1 className="t-h1" style={{ color: 'var(--white)' }}>{report.title}</h1>
         {site && <p className="t-body-sm" style={{ color: 'var(--steel-300)', marginTop: 4 }}>{site.name} · {site.address}</p>}
         <p className="t-label" style={{ color: 'var(--steel-400)', marginTop: 4 }}>
@@ -185,18 +187,24 @@ export default function ReportViewPage() {
 
       {/* Scenario definitions */}
       <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)', marginBottom: 'var(--sp-4)' }}>
-        <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-3)' }}>Scenarios Compared</p>
+        <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-3)' }}>
+          {report.report_type === 'overview' ? 'Data Coverage' : 'Scenarios Compared'}
+        </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {scenarios_snapshot.map(s => (
             <div key={s.id}>
               <p className="t-body-sm" style={{ color: 'var(--white)', fontWeight: 600 }}>{s.name}</p>
               <p className="t-label" style={{ color: 'var(--steel-400)' }}>
                 {new Date(s.starts_at).toLocaleDateString()} – {s.ends_at ? new Date(s.ends_at).toLocaleDateString() : 'ongoing'}
-                {' · '}
-                {s.affected_direction === 'inbound' && 'Affects inbound only'}
-                {s.affected_direction === 'outbound' && 'Affects outbound only'}
-                {s.affected_direction === 'both' && 'Affects both directions'}
-                {!s.affected_direction && 'No directional intervention'}
+                {report.report_type !== 'overview' && (
+                  <>
+                    {' · '}
+                    {s.affected_direction === 'inbound' && 'Affects inbound only'}
+                    {s.affected_direction === 'outbound' && 'Affects outbound only'}
+                    {s.affected_direction === 'both' && 'Affects both directions'}
+                    {!s.affected_direction && 'No directional intervention'}
+                  </>
+                )}
                 {s.description ? ` · ${s.description}` : ''}
               </p>
             </div>
@@ -249,6 +257,7 @@ export default function ReportViewPage() {
       </div>
 
       {/* Comparisons */}
+      {stats.comparisons.length > 0 && (
       <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)', marginBottom: 'var(--sp-4)' }}>
         <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-3)' }}>Pairwise Comparison</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
@@ -287,6 +296,7 @@ export default function ReportViewPage() {
           ))}
         </div>
       </div>
+      )}
 
       {/* Narrative */}
       <div style={{ background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)' }}>

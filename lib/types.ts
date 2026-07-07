@@ -144,6 +144,10 @@ export type Report = {
   id: string
   site_id: string
   title: string
+  // 'comparison' = 2-3 named scenarios compared against each other.
+  // 'overview' = a single conclusion report over the site's entire recorded
+  // history, not scoped to any scenario or comparison.
+  report_type: 'comparison' | 'overview'
   scenario_ids: string[]
   scenarios_snapshot: Scenario[]
   stats: ReportStatsPayload

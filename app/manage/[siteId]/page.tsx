@@ -46,6 +46,7 @@ type SiteInfo = {
 type ReportListItem = {
   id: string
   title: string
+  report_type: 'comparison' | 'overview'
   scenarios_snapshot: { name: string }[]
   created_at: string
 }
@@ -179,6 +180,8 @@ export default function UnitPage() {
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null)
   const [reports, setReports]     = useState<ReportListItem[]>([])
   const [confirmDeleteReportId, setConfirmDeleteReportId] = useState<string | null>(null)
+  const [generatingOverview, setGeneratingOverview] = useState(false)
+  const [overviewError, setOverviewError] = useState('')
   const [loading, setLoading]     = useState(true)
   const [saving, setSaving]       = useState(false)
   const [saveMsg, setSaveMsg]     = useState('')
@@ -225,6 +228,19 @@ export default function UnitPage() {
     await fetch(`/api/admin/sites/${siteId}/reports/${reportId}`, { method: 'DELETE' })
     setConfirmDeleteReportId(null)
     setReports(prev => prev.filter(r => r.id !== reportId))
+  }
+
+  async function generateOverviewReport() {
+    setGeneratingOverview(true)
+    setOverviewError('')
+    const r = await fetch(`/api/admin/sites/${siteId}/reports/overview`, { method: 'POST' })
+    if (r.ok) {
+      const report = await r.json()
+      router.push(`/manage/${siteId}/report/${report.id}`)
+    } else {
+      setOverviewError((await r.json()).error ?? 'Failed to generate overview report')
+      setGeneratingOverview(false)
+    }
   }
 
   async function save() {
@@ -490,21 +506,31 @@ export default function UnitPage() {
         </div>
       </div>
 
-      {/* Comparison reports */}
+      {/* Reports */}
       <div style={{ marginTop: 'var(--sp-4)', background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-4)', flexWrap: 'wrap', marginBottom: 'var(--sp-4)' }}>
           <div>
-            <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 4 }}>Comparison Reports</p>
+            <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 4 }}>Reports</p>
             <p className="t-body-sm" style={{ color: 'var(--steel-400)' }}>
-              Compare up to three date-ranged scenarios (e.g. sign active vs. baseline) and generate a printable case document.
+              Compare up to three date-ranged scenarios (e.g. sign active vs. baseline), or generate an overall conclusion report covering every recording made at this site.
             </p>
           </div>
-          <Link href={`/manage/${siteId}/report/new`} style={{ textDecoration: 'none', flexShrink: 0 }}>
-            <button style={{ background: 'var(--hivis-500)', color: 'var(--white)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '0.04em', padding: '10px 20px', cursor: 'pointer' }}>
-              Run comparison report
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', flexShrink: 0, flexWrap: 'wrap' }}>
+            <button
+              onClick={generateOverviewReport}
+              disabled={generatingOverview}
+              style={{ background: 'var(--asphalt-600)', border: 'var(--bd-dark)', color: 'var(--steel-100)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '0.04em', padding: '10px 20px', cursor: generatingOverview ? 'wait' : 'pointer', opacity: generatingOverview ? 0.6 : 1 }}
+            >
+              {generatingOverview ? 'Generating…' : 'Site overview report'}
             </button>
-          </Link>
+            <Link href={`/manage/${siteId}/report/new`} style={{ textDecoration: 'none' }}>
+              <button style={{ background: 'var(--hivis-500)', color: 'var(--white)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '0.04em', padding: '10px 20px', cursor: 'pointer' }}>
+                Run comparison report
+              </button>
+            </Link>
+          </div>
         </div>
+        {overviewError && <p className="t-body-sm" style={{ color: 'var(--over-500)', marginBottom: 'var(--sp-3)' }}>{overviewError}</p>}
         {reports.length === 0 ? (
           <p className="t-body-sm" style={{ color: 'var(--steel-400)' }}>No reports generated yet.</p>
         ) : (
@@ -514,7 +540,15 @@ export default function UnitPage() {
                 <Link href={`/manage/${siteId}/report/${r.id}`} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3)', background: 'var(--asphalt-600)', borderRadius: 'var(--r-sm)' }}>
                     <div style={{ minWidth: 0 }}>
-                      <p className="t-body-sm" style={{ color: 'var(--white)', fontWeight: 600 }}>{r.title}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+                        <p className="t-body-sm" style={{ color: 'var(--white)', fontWeight: 600 }}>{r.title}</p>
+                        <span className="t-label" style={{
+                          color: r.report_type === 'overview' ? 'var(--hivis-500)' : 'var(--steel-400)',
+                          background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: 'var(--r-xs)', fontSize: 10,
+                        }}>
+                          {r.report_type === 'overview' ? 'OVERVIEW' : 'COMPARISON'}
+                        </span>
+                      </div>
                       <p className="t-label" style={{ color: 'var(--steel-400)' }}>
                         {r.scenarios_snapshot.map(s => s.name).join(' vs ')}
                       </p>

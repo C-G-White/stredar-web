@@ -13,7 +13,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
   const { siteId } = await params
   const rows = await sql`
-    SELECT id, title, scenario_ids, scenarios_snapshot, created_at
+    SELECT id, title, report_type, scenario_ids, scenarios_snapshot, created_at
     FROM reports
     WHERE site_id = ${siteId}
     ORDER BY created_at DESC
