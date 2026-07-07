@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.8",
     "@neondatabase/serverless": "^0.10.4",
+    "ai": "^7.0.16",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "leaflet": "^1.9.4",

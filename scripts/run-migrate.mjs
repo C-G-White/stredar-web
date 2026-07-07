@@ -13,7 +13,7 @@ const migrate = readFileSync(join(__dir, '../lib/migrate.sql'), 'utf8')
 const statements = migrate
   .split(';')
   .map(s => s.trim())
-  .filter(s => s.length > 0 && !s.replace(/--[^\n]*/g, '').trim().length === 0)
+  .filter(s => s.length > 0 && s.replace(/--[^\n]*/g, '').trim().length > 0)
 
 for (const stmt of statements) {
   const clean = stmt.replace(/--[^\n]*/g, '').trim()

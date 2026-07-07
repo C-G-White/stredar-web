@@ -84,3 +84,33 @@ CREATE TABLE IF NOT EXISTS commands (
 
 CREATE INDEX IF NOT EXISTS commands_site_status
   ON commands (site_id, status, created_at);
+
+-- ── Scenario periods (road conditions in force over a date range) ───────────
+CREATE TABLE IF NOT EXISTS scenarios (
+  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  site_id     UUID        NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+  name        TEXT        NOT NULL,
+  description TEXT,
+  starts_at   TIMESTAMPTZ NOT NULL,
+  ends_at     TIMESTAMPTZ, -- NULL = ongoing (uses now() at report time)
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS scenarios_site
+  ON scenarios (site_id);
+
+-- ── Generated comparison reports (immutable snapshots) ───────────────────────
+CREATE TABLE IF NOT EXISTS reports (
+  id                 UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  site_id            UUID        NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+  title              TEXT        NOT NULL,
+  scenario_ids       UUID[]      NOT NULL,
+  scenarios_snapshot JSONB       NOT NULL,
+  stats              JSONB       NOT NULL,
+  narrative          TEXT        NOT NULL,
+  generated_by       TEXT,
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS reports_site_created
+  ON reports (site_id, created_at DESC);

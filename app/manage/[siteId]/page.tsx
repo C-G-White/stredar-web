@@ -43,6 +43,13 @@ type SiteInfo = {
   lat: number | null; lng: number | null
 }
 
+type ReportListItem = {
+  id: string
+  title: string
+  scenarios_snapshot: { name: string }[]
+  created_at: string
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatUptime(s: number | null) {
   if (s == null) return '—'
@@ -170,6 +177,7 @@ export default function UnitPage() {
   const [config, setConfig]       = useState<Config | null>(null)
   const [draft, setDraft]         = useState<Config | null>(null)
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null)
+  const [reports, setReports]     = useState<ReportListItem[]>([])
   const [loading, setLoading]     = useState(true)
   const [saving, setSaving]       = useState(false)
   const [saveMsg, setSaveMsg]     = useState('')
@@ -185,9 +193,10 @@ export default function UnitPage() {
   const [togglingVisible, setTogglingVisible] = useState(false)
 
   const load = useCallback(async () => {
-    const [sitesRes, cfgRes] = await Promise.all([
+    const [sitesRes, cfgRes, reportsRes] = await Promise.all([
       fetch('/api/admin/sites'),
       fetch(`/api/admin/sites/${siteId}/config`),
+      fetch(`/api/admin/sites/${siteId}/reports`),
     ])
     if (sitesRes.ok) {
       const all: SiteInfo[] = await sitesRes.json()
@@ -198,6 +207,9 @@ export default function UnitPage() {
       const c: Config = await cfgRes.json()
       setConfig(c)
       setDraft(prev => prev ?? c)  // only set draft on first load
+    }
+    if (reportsRes.ok) {
+      setReports(await reportsRes.json())
     }
     setLoading(false)
   }, [siteId])
@@ -469,6 +481,44 @@ export default function UnitPage() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Comparison reports */}
+      <div style={{ marginTop: 'var(--sp-4)', background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-4)', flexWrap: 'wrap', marginBottom: 'var(--sp-4)' }}>
+          <div>
+            <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 4 }}>Comparison Reports</p>
+            <p className="t-body-sm" style={{ color: 'var(--steel-400)' }}>
+              Compare up to three date-ranged scenarios (e.g. sign active vs. baseline) and generate a printable case document.
+            </p>
+          </div>
+          <Link href={`/manage/${siteId}/report/new`} style={{ textDecoration: 'none', flexShrink: 0 }}>
+            <button style={{ background: 'var(--hivis-500)', color: 'var(--white)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '0.04em', padding: '10px 20px', cursor: 'pointer' }}>
+              Run comparison report
+            </button>
+          </Link>
+        </div>
+        {reports.length === 0 ? (
+          <p className="t-body-sm" style={{ color: 'var(--steel-400)' }}>No reports generated yet.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+            {reports.map(r => (
+              <Link key={r.id} href={`/manage/${siteId}/report/${r.id}`} style={{ textDecoration: 'none' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3)', background: 'var(--asphalt-600)', borderRadius: 'var(--r-sm)' }}>
+                  <div>
+                    <p className="t-body-sm" style={{ color: 'var(--white)', fontWeight: 600 }}>{r.title}</p>
+                    <p className="t-label" style={{ color: 'var(--steel-400)' }}>
+                      {r.scenarios_snapshot.map(s => s.name).join(' vs ')}
+                    </p>
+                  </div>
+                  <span className="t-label" style={{ color: 'var(--steel-400)', whiteSpace: 'nowrap' }}>
+                    {new Date(r.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Public visibility */}
