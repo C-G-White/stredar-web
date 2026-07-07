@@ -34,7 +34,17 @@ function percentile(sortedAsc: number[], p: number): number {
   return sortedAsc[lo] + (sortedAsc[hi] - sortedAsc[lo]) * (idx - lo)
 }
 
-function computeDirectionStats(speeds: number[], speedLimitMph: number, durationDays: number): DirectionStats {
+// Distinct UTC calendar dates present in the readings — a proxy for "days the
+// device was actually recording", so passes/day isn't diluted by days the
+// unit was offline (no readings at all) but still counted in the elapsed span.
+function countActiveDays(readings: ReadingRow[]): number {
+  // recorded_at may arrive as a Date (raw from the DB driver) or an ISO
+  // string (once round-tripped through JSON), so normalize via `new Date`.
+  const days = new Set(readings.map(r => new Date(r.recorded_at).toISOString().slice(0, 10)))
+  return Math.max(days.size, 1)
+}
+
+function computeDirectionStats(speeds: number[], speedLimitMph: number, activeDays: number): DirectionStats {
   const n = speeds.length
   if (n === 0) {
     return {
@@ -45,7 +55,7 @@ function computeDirectionStats(speeds: number[], speedLimitMph: number, duration
   const sorted = [...speeds].sort((a, b) => a - b)
   return {
     count: n,
-    passes_per_day: round(n / durationDays),
+    passes_per_day: round(n / activeDays),
     mean_speed_mph: round(mean(speeds)),
     median_speed_mph: round(percentile(sorted, 50)),
     p85_speed_mph: round(percentile(sorted, 85)),
@@ -67,8 +77,11 @@ export function computeScenarioStats(
   const endsAt = scenario.ends_at ? new Date(scenario.ends_at) : new Date()
   const startsAt = new Date(scenario.starts_at)
   const durationDays = Math.max((endsAt.getTime() - startsAt.getTime()) / 86_400_000, 1 / 24)
+  // Days the unit had zero readings (offline, not just quiet) shouldn't dilute
+  // passes/day — use the count of days that actually have data as the divisor.
+  const activeDays = countActiveDays(readings)
 
-  const overall = computeDirectionStats(readings.map(r => r.speed_mph), speedLimitMph, durationDays)
+  const overall = computeDirectionStats(readings.map(r => r.speed_mph), speedLimitMph, activeDays)
 
   const inboundSpeeds = readings.filter(r => r.direction === 1).map(r => r.speed_mph)
   const outboundSpeeds = readings.filter(r => r.direction === -1).map(r => r.speed_mph)
@@ -85,11 +98,12 @@ export function computeScenarioStats(
     starts_at: scenario.starts_at,
     ends_at: scenario.ends_at,
     duration_days: round(durationDays, 2),
+    active_days: activeDays,
     overall,
     by_direction: hasDirectionData
       ? {
-          inbound: inboundSpeeds.length ? computeDirectionStats(inboundSpeeds, speedLimitMph, durationDays) : null,
-          outbound: outboundSpeeds.length ? computeDirectionStats(outboundSpeeds, speedLimitMph, durationDays) : null,
+          inbound: inboundSpeeds.length ? computeDirectionStats(inboundSpeeds, speedLimitMph, activeDays) : null,
+          outbound: outboundSpeeds.length ? computeDirectionStats(outboundSpeeds, speedLimitMph, activeDays) : null,
         }
       : null,
     display_effectiveness:
@@ -217,7 +231,14 @@ export function normalizeReportStats(stats: unknown): ReportStatsPayload {
     speed_limit_mph: s.speed_limit_mph,
     focus_direction: s.focus_direction ?? 'overall',
     scenarios: (s.scenarios ?? []).map((sc: Record<string, unknown>): ScenarioStats => {
-      if (sc.overall) return sc as unknown as ScenarioStats
+      // active_days didn't exist before the downtime fix — best-effort fall
+      // back to the calendar duration (equivalent to the old, pre-fix figure).
+      if (sc.overall) {
+        return {
+          ...(sc as unknown as ScenarioStats),
+          active_days: (sc.active_days as number) ?? Math.max(Math.ceil(sc.duration_days as number), 1),
+        }
+      }
       const normalizeDirection = (d: Record<string, unknown> | null | undefined): DirectionStats | null =>
         d
           ? {
@@ -237,6 +258,7 @@ export function normalizeReportStats(stats: unknown): ReportStatsPayload {
         starts_at: sc.starts_at as string,
         ends_at: sc.ends_at as string | null,
         duration_days: sc.duration_days as number,
+        active_days: Math.max(Math.ceil(sc.duration_days as number), 1),
         overall: {
           count: (sc.total_passes as number) ?? 0,
           passes_per_day: (sc.passes_per_day as number) ?? 0,

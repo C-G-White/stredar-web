@@ -233,8 +233,10 @@ export default function ReportViewPage() {
           </thead>
           <tbody>
             {metricRow('Duration (days)', scenarios, s => fmt(s.duration_days))}
+            {metricRow('Active days (with data)', scenarios, s =>
+              s.active_days < Math.floor(s.duration_days) ? `${s.active_days} ⚠` : fmt(s.active_days))}
             {metricRow('Total passes', scenarios, s => fmt(s.overall.count))}
-            {metricRow('Passes / day', scenarios, s => fmt(s.overall.passes_per_day))}
+            {metricRow('Passes / day (active days)', scenarios, s => fmt(s.overall.passes_per_day))}
             {metricRow('Mean speed (overall)', scenarios, s => fmt(s.overall.mean_speed_mph, ' mph'))}
             {metricRow('Median speed (overall)', scenarios, s => fmt(s.overall.median_speed_mph, ' mph'))}
             {metricRow('85th percentile (overall)', scenarios, s => fmt(s.overall.p85_speed_mph, ' mph'))}
@@ -254,6 +256,11 @@ export default function ReportViewPage() {
                 : '—')}
           </tbody>
         </table>
+        {scenarios.some(s => s.active_days < Math.floor(s.duration_days)) && (
+          <p className="t-body-sm" style={{ color: 'var(--warn-500)', marginTop: 'var(--sp-3)' }}>
+            ⚠ One or more periods have fewer active days than their calendar duration, meaning the unit had no data on some days (offline or not yet deployed). Passes/day is calculated using active days only, so it isn't diluted by that downtime.
+          </p>
+        )}
       </div>
 
       {/* Comparisons */}

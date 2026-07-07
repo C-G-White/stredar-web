@@ -103,6 +103,10 @@ export type ScenarioStats = {
   starts_at: string
   ends_at: string | null
   duration_days: number
+  // Distinct days with at least one reading — used as the passes/day divisor
+  // instead of duration_days, so days the unit was offline (no data at all)
+  // don't dilute the volume figure. duration_days > active_days signals downtime.
+  active_days: number
   overall: DirectionStats
   by_direction: { inbound: DirectionStats | null; outbound: DirectionStats | null } | null
   display_effectiveness: {
