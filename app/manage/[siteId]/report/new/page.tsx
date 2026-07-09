@@ -65,6 +65,7 @@ export default function NewReportPage() {
   const [affectsInbound, setAffectsInbound] = useState(false)
   const [affectsOutbound, setAffectsOutbound] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [context, setContext] = useState('')
 
   const load = useCallback(async () => {
     const r = await fetch(`/api/admin/sites/${siteId}/scenarios`)
@@ -120,7 +121,7 @@ export default function NewReportPage() {
     const r = await fetch(`/api/admin/sites/${siteId}/reports`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scenario_ids: selected }),
+      body: JSON.stringify({ scenario_ids: selected, user_context: context.trim() || undefined }),
     })
     if (r.ok) {
       const report = await r.json()
@@ -237,6 +238,23 @@ export default function NewReportPage() {
                 </div>
               )
             })}
+          </div>
+        </Section>
+
+        <Section title="Context for the AI (optional)">
+          <div>
+            <label className="t-label" style={{ color: 'var(--steel-200)' }}>
+              Anything the council should know when reading this report
+            </label>
+            <textarea
+              style={{ ...fieldStyle(), minHeight: 90, resize: 'vertical', fontFamily: 'var(--font-sans)' }}
+              value={context}
+              onChange={e => setContext(e.target.value)}
+              placeholder="e.g. school on this road, resident complaints about speeding, recent collision history, nearby roadworks…"
+            />
+            <p className="t-body-sm" style={{ color: 'var(--steel-400)', marginTop: 6 }}>
+              Used to frame the write-up — not treated as measured data.
+            </p>
           </div>
         </Section>
 

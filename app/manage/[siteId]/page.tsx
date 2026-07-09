@@ -182,6 +182,8 @@ export default function UnitPage() {
   const [confirmDeleteReportId, setConfirmDeleteReportId] = useState<string | null>(null)
   const [generatingOverview, setGeneratingOverview] = useState(false)
   const [overviewError, setOverviewError] = useState('')
+  const [showOverviewContext, setShowOverviewContext] = useState(false)
+  const [overviewContext, setOverviewContext] = useState('')
   const [loading, setLoading]     = useState(true)
   const [saving, setSaving]       = useState(false)
   const [saveMsg, setSaveMsg]     = useState('')
@@ -233,7 +235,11 @@ export default function UnitPage() {
   async function generateOverviewReport() {
     setGeneratingOverview(true)
     setOverviewError('')
-    const r = await fetch(`/api/admin/sites/${siteId}/reports/overview`, { method: 'POST' })
+    const r = await fetch(`/api/admin/sites/${siteId}/reports/overview`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_context: overviewContext.trim() || undefined }),
+    })
     if (r.ok) {
       const report = await r.json()
       router.push(`/manage/${siteId}/report/${report.id}`)
@@ -517,7 +523,7 @@ export default function UnitPage() {
           </div>
           <div style={{ display: 'flex', gap: 'var(--sp-2)', flexShrink: 0, flexWrap: 'wrap' }}>
             <button
-              onClick={generateOverviewReport}
+              onClick={() => setShowOverviewContext(v => !v)}
               disabled={generatingOverview}
               style={{ background: 'var(--asphalt-600)', border: 'var(--bd-dark)', color: 'var(--steel-100)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '0.04em', padding: '10px 20px', cursor: generatingOverview ? 'wait' : 'pointer', opacity: generatingOverview ? 0.6 : 1 }}
             >
@@ -530,6 +536,41 @@ export default function UnitPage() {
             </Link>
           </div>
         </div>
+        {showOverviewContext && (
+          <div style={{ marginBottom: 'var(--sp-4)', padding: 'var(--sp-4)', background: 'var(--asphalt-600)', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)' }}>
+            <label className="t-label" style={{ color: 'var(--steel-200)' }}>
+              Context for the AI (optional) — anything the council should know
+            </label>
+            <textarea
+              style={{
+                marginTop: 6, width: '100%', minHeight: 80, resize: 'vertical',
+                background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-sm)',
+                color: 'var(--white)', fontFamily: 'var(--font-sans)', fontSize: 14, padding: 'var(--sp-3)', outline: 'none',
+              }}
+              value={overviewContext}
+              onChange={e => setOverviewContext(e.target.value)}
+              placeholder="e.g. school on this road, resident complaints about speeding, recent collision history, nearby roadworks…"
+            />
+            <p className="t-body-sm" style={{ color: 'var(--steel-400)', marginTop: 6 }}>
+              Used to frame the write-up — not treated as measured data.
+            </p>
+            <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-3)' }}>
+              <button
+                onClick={generateOverviewReport}
+                disabled={generatingOverview}
+                style={{ background: 'var(--hivis-500)', color: 'var(--white)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, padding: '8px 16px', cursor: generatingOverview ? 'wait' : 'pointer', opacity: generatingOverview ? 0.6 : 1 }}
+              >
+                {generatingOverview ? 'Generating…' : 'Generate overview report'}
+              </button>
+              <button
+                onClick={() => setShowOverviewContext(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--steel-300)', fontSize: 13, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
         {overviewError && <p className="t-body-sm" style={{ color: 'var(--over-500)', marginBottom: 'var(--sp-3)' }}>{overviewError}</p>}
         {reports.length === 0 ? (
           <p className="t-body-sm" style={{ color: 'var(--steel-400)' }}>No reports generated yet.</p>

@@ -111,8 +111,11 @@ CREATE TABLE IF NOT EXISTS reports (
   stats              JSONB       NOT NULL,
   narrative          TEXT        NOT NULL,
   generated_by       TEXT,
+  user_context       TEXT, -- free-text situational context supplied by the operator, given to the AI alongside the data
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS user_context TEXT;
 
 CREATE INDEX IF NOT EXISTS reports_site_created
   ON reports (site_id, created_at DESC);

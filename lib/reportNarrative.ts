@@ -17,6 +17,7 @@ Ground rules:
   - When focus_direction is 'inbound' or 'outbound', treat the OTHER direction (unaffected by the intervention) as an implicit control group recorded in the exact same period. If the affected direction shows a material, significant change while the control direction does not, that is much stronger causal evidence than an overall change alone — it rules out confounds that would hit both directions equally (weather, season, general traffic growth). If both directions move together, say so explicitly and attribute the change to something other than the intervention, since the control moved too.
   - When focus_direction is 'overall' (no single directional intervention specified, or a 'both'-direction intervention like a chicane), reason from the overall comparison and note the inbound/outbound breakdown only as supporting colour.
 - If the data does not support a case that there is a road safety issue, or that a scenario changed driver behaviour, say so directly rather than overstating the findings. An honest "no material difference found" is a valid and useful conclusion.
+- A "site operator context" note may be provided below the data block. It is background supplied by the person requesting the report (e.g. a nearby school, resident complaints, a known local hazard, recent roadworks) — use it to frame the Executive Summary and Recommendation in terms a council officer will recognise, NOT as data. Never treat it as evidence equivalent to the measured statistics, and never present it as something the sensor recorded. If it's absent, don't mention its absence.
 - Tone: direct, technical, outcome-led — write for a council officer who wants a compliance case, not marketing copy. No exclamation marks, no hype.
 - Structure the report with these headings exactly: "Executive Summary", "Methodology", "Findings", "Caveats & Limitations", "Recommendation". Use plain paragraphs and short bullet lists under each heading as appropriate. Do not use markdown headers (#) — write the heading text on its own line instead.`
 
@@ -24,6 +25,7 @@ export type NarrativeInput = {
   site: Pick<Site, 'name' | 'address' | 'speed_limit_mph'>
   scenarios: Scenario[]
   stats: ReportStatsPayload
+  userContext?: string | null
 }
 
 export async function generateNarrative(
@@ -39,10 +41,14 @@ export async function generateNarrative(
     2,
   )
 
+  const contextBlock = input.userContext?.trim()
+    ? `\n\nSite operator context (background only, not data):\n\n${input.userContext.trim()}`
+    : ''
+
   const { text } = await generateText({
     model: anthropic(MODEL),
     system: SYSTEM_PROMPT,
-    prompt: `Site and comparison data:\n\n${dataBlock}\n\nWrite the report now.`,
+    prompt: `Site and comparison data:\n\n${dataBlock}${contextBlock}\n\nWrite the report now.`,
   })
 
   return { narrative: text.trim(), generatedBy: MODEL }
@@ -59,6 +65,7 @@ Ground rules:
 - This report spans the site's entire recorded history and does NOT isolate the effect of any single road condition or intervention — if different conditions (e.g. sign on vs off) were in force at different times within the coverage period, the figures given are a blend of all of them. State this limitation plainly, and recommend the site's separate scenario-comparison feature for isolating the causal effect of a specific intervention.
 - If the coverage period is short or the sample size small, say so and temper conclusions accordingly.
 - If the data does not support a case that there is a road safety issue, say so directly rather than overstating the findings. An honest "no material issue found" is a valid and useful conclusion.
+- A "site operator context" note may be provided below the data block. It is background supplied by the person requesting the report (e.g. a nearby school, resident complaints, a known local hazard, recent roadworks) — use it to frame the Executive Summary and Recommendation in terms a council officer will recognise, NOT as data. Never treat it as evidence equivalent to the measured statistics, and never present it as something the sensor recorded. If it's absent, don't mention its absence.
 - Tone: direct, technical, outcome-led — write for a council officer who wants an evidence-based case, not marketing copy. No exclamation marks, no hype.
 - Structure the report with these headings exactly: "Executive Summary", "Methodology", "Findings", "Caveats & Limitations", "Recommendation". Use plain paragraphs and short bullet lists under each heading as appropriate. Do not use markdown headers (#) — write the heading text on its own line instead.`
 
@@ -66,6 +73,7 @@ export type OverviewNarrativeInput = {
   site: Pick<Site, 'name' | 'address' | 'speed_limit_mph'>
   coverage: Pick<Scenario, 'starts_at' | 'ends_at'>
   stats: ReportStatsPayload
+  userContext?: string | null
 }
 
 export async function generateOverviewNarrative(
@@ -81,10 +89,14 @@ export async function generateOverviewNarrative(
     2,
   )
 
+  const contextBlock = input.userContext?.trim()
+    ? `\n\nSite operator context (background only, not data):\n\n${input.userContext.trim()}`
+    : ''
+
   const { text } = await generateText({
     model: anthropic(MODEL),
     system: OVERVIEW_SYSTEM_PROMPT,
-    prompt: `Site and coverage data:\n\n${dataBlock}\n\nWrite the report now.`,
+    prompt: `Site and coverage data:\n\n${dataBlock}${contextBlock}\n\nWrite the report now.`,
   })
 
   return { narrative: text.trim(), generatedBy: MODEL }

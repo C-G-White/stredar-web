@@ -157,5 +157,8 @@ export type Report = {
   stats: ReportStatsPayload
   narrative: string
   generated_by: string | null
+  // Free-text situational context the operator supplied at generation time,
+  // passed to the AI alongside the data (e.g. nearby school, resident complaints).
+  user_context: string | null
   created_at: string
 }

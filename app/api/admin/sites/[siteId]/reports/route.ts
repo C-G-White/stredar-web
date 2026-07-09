@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
-  const { scenario_ids, title: titleInput } = body as Record<string, unknown>
+  const { scenario_ids, title: titleInput, user_context: userContextInput } = body as Record<string, unknown>
 
   if (!Array.isArray(scenario_ids) || scenario_ids.length < 2 || scenario_ids.length > 3) {
     return NextResponse.json({ error: 'scenario_ids must contain 2 or 3 scenario ids' }, { status: 400 })
@@ -43,6 +43,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (!scenario_ids.every(id => typeof id === 'string')) {
     return NextResponse.json({ error: 'scenario_ids must be strings' }, { status: 400 })
   }
+  const userContext = typeof userContextInput === 'string' && userContextInput.trim() ? userContextInput.trim() : null
 
   const scenarioRows = await sql`
     SELECT * FROM scenarios WHERE site_id = ${siteId} AND id = ANY(${scenario_ids as string[]})
@@ -88,10 +89,10 @@ export async function POST(req: NextRequest, { params }: Params) {
       ? titleInput.trim()
       : `${site.name} — ${scenarios.map(s => s.name).join(' vs ')}`
 
-  const { narrative, generatedBy } = await generateNarrative({ site, scenarios, stats })
+  const { narrative, generatedBy } = await generateNarrative({ site, scenarios, stats, userContext })
 
   const [report] = await sql`
-    INSERT INTO reports (site_id, title, scenario_ids, scenarios_snapshot, stats, narrative, generated_by)
+    INSERT INTO reports (site_id, title, scenario_ids, scenarios_snapshot, stats, narrative, generated_by, user_context)
     VALUES (
       ${siteId},
       ${title},
@@ -99,7 +100,8 @@ export async function POST(req: NextRequest, { params }: Params) {
       ${JSON.stringify(scenarios)},
       ${JSON.stringify(stats)},
       ${narrative},
-      ${generatedBy}
+      ${generatedBy},
+      ${userContext}
     )
     RETURNING *
   `

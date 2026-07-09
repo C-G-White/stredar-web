@@ -7,7 +7,7 @@ import type { ReportStatsPayload, Scenario, Site } from '@/lib/types'
 
 type Params = { params: Promise<{ siteId: string }> }
 
-export async function POST(_req: NextRequest, { params }: Params) {
+export async function POST(req: NextRequest, { params }: Params) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -16,6 +16,12 @@ export async function POST(_req: NextRequest, { params }: Params) {
     Pick<Site, 'id' | 'name' | 'address' | 'speed_limit_mph'>,
   ]
   if (!site) return NextResponse.json({ error: 'Site not found' }, { status: 404 })
+
+  // Body is optional — the overview report can be generated with a single click.
+  let body: Record<string, unknown> = {}
+  try { body = await req.json() } catch { /* no body sent */ }
+  const userContextInput = body.user_context
+  const userContext = typeof userContextInput === 'string' && userContextInput.trim() ? userContextInput.trim() : null
 
   const readings = await sql`
     SELECT speed_mph, direction, entry_speed_mph, exit_speed_mph, recorded_at
@@ -50,10 +56,10 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
   const title = `${site.name} — Site Overview Report`
 
-  const { narrative, generatedBy } = await generateOverviewNarrative({ site, coverage, stats })
+  const { narrative, generatedBy } = await generateOverviewNarrative({ site, coverage, stats, userContext })
 
   const [report] = await sql`
-    INSERT INTO reports (site_id, title, report_type, scenario_ids, scenarios_snapshot, stats, narrative, generated_by)
+    INSERT INTO reports (site_id, title, report_type, scenario_ids, scenarios_snapshot, stats, narrative, generated_by, user_context)
     VALUES (
       ${siteId},
       ${title},
@@ -62,7 +68,8 @@ export async function POST(_req: NextRequest, { params }: Params) {
       ${JSON.stringify([coverage])},
       ${JSON.stringify(stats)},
       ${narrative},
-      ${generatedBy}
+      ${generatedBy},
+      ${userContext}
     )
     RETURNING *
   `

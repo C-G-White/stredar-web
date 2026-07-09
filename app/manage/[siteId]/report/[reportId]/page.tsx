@@ -215,6 +215,12 @@ export default function ReportViewPage() {
             This report treats {stats.focus_direction} as the primary evidence, using the other direction as an unaffected control recorded in the same periods.
           </p>
         )}
+        {report.user_context && (
+          <div style={{ marginTop: 'var(--sp-3)', paddingTop: 'var(--sp-3)', borderTop: 'var(--bd-dark)' }}>
+            <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 4 }}>Operator-Supplied Context</p>
+            <p className="t-body-sm" style={{ color: 'var(--steel-200)', whiteSpace: 'pre-wrap' }}>{report.user_context}</p>
+          </div>
+        )}
       </div>
 
       {/* Stats table */}
