@@ -120,7 +120,7 @@ export default function ManagePage() {
                   <p className="t-data" style={{ color: 'var(--steel-100)' }}>{site.mode ?? '—'}</p>
                 </div>
                 <div>
-                  <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 2 }}>Today</p>
+                  <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 2 }}>Last 24h</p>
                   <p className="t-data" style={{ color: 'var(--steel-100)' }}>{site.readings_today} <span style={{ color: 'var(--steel-400)', fontSize: 11 }}>passes</span></p>
                 </div>
                 <div>

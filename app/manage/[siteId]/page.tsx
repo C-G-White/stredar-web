@@ -479,9 +479,9 @@ export default function UnitPage() {
 
       </div>
 
-      {/* Today's activity */}
+      {/* Last 24 hours activity */}
       <div style={{ marginTop: 'var(--sp-4)', background: 'var(--asphalt-700)', border: 'var(--bd-dark)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)' }}>
-        <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-4)' }}>Today's Activity</p>
+        <p className="t-label" style={{ color: 'var(--steel-300)', marginBottom: 'var(--sp-4)' }}>Last 24 Hours</p>
         <div style={{ display: 'flex', gap: 'var(--sp-8)', flexWrap: 'wrap' }}>
           <div>
             <p className="t-label" style={{ color: 'var(--steel-400)', marginBottom: 4 }}>Total passes</p>
